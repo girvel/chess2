@@ -139,9 +139,8 @@ func (b *Board) Move(move Move) {
 }
 
 // TODO split detection & validation
-// NEXT fix castling through check
 func (b *Board) WillBeEnPassant(m Move) bool {
-	source := *b.At(m.X1, m.X2)
+	source := *b.At(m.X1, m.Y1)
 	if source != PieceWhitePawn && source != PieceBlackPawn {
 		return false
 	}
