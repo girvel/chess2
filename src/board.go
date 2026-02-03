@@ -217,7 +217,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 
 	source := *b.At(m.X1, m.Y1)
 	dest := *b.At(m.X2, m.Y2)
-	if !source.Is(b.Turn) {
+	if !source.Is(b.Turn) || dest.Is(b.Turn) {
 		return false
 	}
 
@@ -239,10 +239,8 @@ func (b *Board) IsMoveLegal(m Move) bool {
 			return true
 		}
 
-		other_side := 1 - b.Turn
 		if (m.X2 == m.X1 - 1 || m.X2 == m.X1 + 1) && 
-			m.Y2 == m.Y1 + direction &&
-			dest.Is(other_side) {
+			m.Y2 == m.Y1 + direction {
 			return true
 		}
 
@@ -337,7 +335,6 @@ func (b *Board) GetMoves(x, y int) []Move {
 		}
 	}
 
-	println(result)
 	return result
 }
 
