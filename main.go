@@ -34,8 +34,8 @@ var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
 
 type Side int
 
-const Black Side = 0
-const White Side = 1
+const SideBlack Side = 0
+const SideWhite Side = 1
 
 type Piece int
 const (
@@ -66,7 +66,7 @@ type Board struct {
 
 func EmptyBoard() *Board {
 	var result Board
-	result.turn = White
+	result.turn = SideWhite
 
 	*result.At(0, 0) = PieceBlackRook
 	*result.At(1, 0) = PieceBlackKnight
@@ -118,10 +118,6 @@ type Move struct {
 	x1, y1, x2, y2 int
 }
 
-// func (m Move) IsExtendedPawnMove() bool {
-// 	
-// }
-
 func (b *Board) Move(move Move) {
 	if b.WillBeEnPassant(move) {
 		*b.At(move.x2, move.y1) = PieceNone;
@@ -146,7 +142,7 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 	}
 
 	neighbor := *b.At(m.x2, m.y1)
-	if b.turn == White {
+	if b.turn == SideWhite {
 		return neighbor == PieceBlackPawn
 	} else {
 		return neighbor == PieceWhitePawn
@@ -191,6 +187,11 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 
 		return b.WillBeEnPassant(m)
+
+	case PieceWhiteKnight, PieceBlackKnight:
+		x := m.x2 - m.x1
+		y := m.y2 - m.y1
+		return abs(y) == 3 - abs(x) && x != 0 && y != 0
 
 	case PieceWhiteBishop, PieceBlackBishop:
 		if abs(m.x2 - m.x1) != abs(m.y2 - m.y1) {
