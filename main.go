@@ -9,6 +9,9 @@ const totalCellSize int = scale * cellSize
 const w int = 8
 const h int = 8
 
+var white rl.Color = rl.GetColor(0xedededff)
+var black rl.Color = rl.GetColor(0x3a373dff)
+
 type Piece int
 const (
 	PieceNone Piece = iota
@@ -76,9 +79,17 @@ func (b *Board) At(x, y int) *Piece {
 	return &b.inner[x + y * w]
 }
 
-func LoadSprite(filepath string) rl.Texture2D {
+func LoadWhitePiece(filepath string) rl.Texture2D {
 	image := rl.LoadImage(filepath)
 	defer rl.UnloadImage(image)
+	rl.ImageResizeNN(image, image.Width * int32(scale), image.Height * int32(scale))
+	return rl.LoadTextureFromImage(image)
+}
+
+func LoadBlackPiece(filepath string) rl.Texture2D {
+	image := rl.LoadImage(filepath)
+	defer rl.UnloadImage(image)
+	rl.ImageColorReplace(image, white, black)
 	rl.ImageResizeNN(image, image.Width * int32(scale), image.Height * int32(scale))
 	return rl.LoadTextureFromImage(image)
 }
@@ -89,25 +100,22 @@ func main() {
 	rl.SetTargetFPS(60)
 
 	sprites := []rl.Texture2D{
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/white_pawn.png"),
-		LoadSprite("sprites/black_pawn.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/white_rook.png"),
-		LoadSprite("sprites/black_rook.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/none.png"),
+		LoadWhitePiece("sprites/none.png"),
+		LoadWhitePiece("sprites/pawn.png"),
+		LoadBlackPiece("sprites/pawn.png"),
+		LoadWhitePiece("sprites/none.png"),
+		LoadBlackPiece("sprites/none.png"),
+		LoadWhitePiece("sprites/none.png"),
+		LoadBlackPiece("sprites/none.png"),
+		LoadWhitePiece("sprites/rook.png"),
+		LoadBlackPiece("sprites/rook.png"),
+		LoadWhitePiece("sprites/none.png"),
+		LoadBlackPiece("sprites/none.png"),
+		LoadWhitePiece("sprites/none.png"),
+		LoadBlackPiece("sprites/none.png"),
 	}
 
 	board := EmptyBoard()
-
-	white := rl.GetColor(0xedededff)
-	black := rl.GetColor(0x3a373dff)
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
