@@ -93,6 +93,10 @@ type Move struct {
 	X1, Y1, X2, Y2 int
 }
 
+func NewMove(x1, y1, x2, y2 int) Move {
+	return Move{ X1: x1, Y1: y1, X2: x2, Y2: y2 }
+}
+
 func (b *Board) Move(move Move) {
 	if b.WillBeEnPassant(move) {
 		*b.At(move.X2, move.Y1) = PieceNone;

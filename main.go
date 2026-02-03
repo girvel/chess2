@@ -89,7 +89,7 @@ func main() {
 			y := int(rl.GetMouseY()) / totalCellSize
 
 			if isSelected {
-				move := chess2.Move{selectedX, selectedY, x, y}
+				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
 				}
