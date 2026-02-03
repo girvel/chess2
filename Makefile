@@ -14,7 +14,7 @@ build-win:
 	@echo "Building for Windows..."
 	@mkdir -p $(DIST_DIR)
 	CGO_ENABLED=1 CC=$(WIN_CC) GOOS=windows GOARCH=amd64 \
-	go build -ldflags "-s -w -H=windowsgui" \
+	go build -ldflags "-s -w -H=windowsgui -extldflags '-static'" \
 	-o $(DIST_DIR)/$(APP_NAME).exe main.go
 
 pack:
