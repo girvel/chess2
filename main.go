@@ -99,25 +99,25 @@ func main() {
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-	sprites := []rl.Texture2D{
-		LoadWhitePiece("sprites/none.png"),
-		LoadWhitePiece("sprites/pawn.png"),
-		LoadBlackPiece("sprites/pawn.png"),
-		LoadWhitePiece("sprites/none.png"),
-		LoadBlackPiece("sprites/none.png"),
-		LoadWhitePiece("sprites/none.png"),
-		LoadBlackPiece("sprites/none.png"),
-		LoadWhitePiece("sprites/rook.png"),
-		LoadBlackPiece("sprites/rook.png"),
-		LoadWhitePiece("sprites/none.png"),
-		LoadBlackPiece("sprites/none.png"),
-		LoadWhitePiece("sprites/none.png"),
-		LoadBlackPiece("sprites/none.png"),
-	}
-
 	board := EmptyBoard()
 
 	for !rl.WindowShouldClose() {
+		sprites := []rl.Texture2D{
+			LoadWhitePiece("sprites/none.png"),
+			LoadWhitePiece("sprites/pawn.png"),
+			LoadBlackPiece("sprites/pawn.png"),
+			LoadWhitePiece("sprites/knight.png"),
+			LoadBlackPiece("sprites/knight.png"),
+			LoadWhitePiece("sprites/bishop.png"),
+			LoadBlackPiece("sprites/bishop.png"),
+			LoadWhitePiece("sprites/rook.png"),
+			LoadBlackPiece("sprites/rook.png"),
+			LoadWhitePiece("sprites/queen.png"),
+			LoadBlackPiece("sprites/queen.png"),
+			LoadWhitePiece("sprites/king.png"),
+			LoadBlackPiece("sprites/king.png"),
+		}
+
 		rl.BeginDrawing()
 		for x := range w {
 			for y := range h {
@@ -142,5 +142,9 @@ func main() {
 			}
 		}
 		rl.EndDrawing()
+
+		for _, sprite := range sprites {
+			rl.UnloadTexture(sprite)
+		}
 	}
 }
