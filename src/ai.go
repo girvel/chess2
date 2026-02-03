@@ -23,3 +23,39 @@ func Evaluate(b Board) float64 {
 
 	return result
 }
+
+func BestMove(b Board, depth int) Move {
+	var result Move
+	var bestScore float64
+	isMaximizing := b.Turn == SideWhite
+	if isMaximizing {
+		bestScore = -1000
+	} else {
+		bestScore = 1000
+	}
+
+	for x := range BoardSize {
+		for y := range BoardSize {
+			piece := *b.At(x, y)
+			if piece.Side() != b.Turn {
+				continue
+			}
+
+			for _, m := range b.GetMoves(x, y) {
+				score := Evaluate(*b.Apply(m))
+				var condition bool
+				if isMaximizing {
+					condition = score > bestScore
+				} else {
+					condition = score < bestScore
+				}
+				if condition {
+					bestScore = score
+					result = m
+				}
+			}
+		}
+	}
+
+	return result
+}

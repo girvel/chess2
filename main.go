@@ -100,6 +100,7 @@ func main() {
 		if board.Winner != chess2.SideNone {
 			continue
 		}
+
 		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 			x := int(rl.GetMouseX()) / totalCellSize
 			y := int(rl.GetMouseY()) / totalCellSize
@@ -108,6 +109,9 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
+					bestResponse := chess2.BestMove(*board, 1)
+					println(bestResponse.String())
+					board.Move(bestResponse)
 				}
 				isSelected = false
 			} else {

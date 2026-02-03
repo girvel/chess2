@@ -107,6 +107,10 @@ func NewMove(x1, y1, x2, y2 int) Move {
 	return Move{ X1: x1, Y1: y1, X2: x2, Y2: y2 }
 }
 
+func (m Move) String() string {
+	return fmt.Sprintf("%c%d-%c%d", 'a' + m.X1, 8 - m.Y1, 'a' + m.X2, 8 - m.Y2)
+}
+
 func (b *Board) Move(move Move) {
 	switch {
 	case b.WillBeEnPassant(move):
@@ -145,8 +149,12 @@ func (b *Board) Move(move Move) {
 	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
 	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
 	}
+}
 
-	println(Evaluate(*b))
+func (b Board) Apply(move Move) *Board {
+	result := b
+	result.Move(move)
+	return &result
 }
 
 // TODO split detection & validation
@@ -265,6 +273,10 @@ func (b *Board) IsMoveLegal(m Move) bool {
 	ox := m.X2 - m.X1
 	oy := m.Y2 - m.Y1
 
+	if ox == 0 && oy == 0 {
+		return false
+	}
+
 	switch source {
 	case PieceWhiteKnight, PieceBlackKnight:
 		return Abs(oy) == 3 - Abs(ox) && ox != 0 && oy != 0
@@ -305,7 +317,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 	}
 }
 
-func (b *Board) GetMoves(x, y int) []Move {
+func (b Board) GetMoves(x, y int) []Move {
 	var potential []Move
 	source := *b.At(x, y)
 	switch source {
