@@ -153,11 +153,12 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 
 		centerline := int(4 - b.turn)
-		if m.y1 != centerline || m.y2 != centerline + direction {
-			return false
-		}
-
-		if abs(m.x2 - m.x1) != 1 {
+		if m.y1 != centerline ||
+			m.y2 != centerline + direction ||
+			abs(m.x2 - m.x1) != 1 ||
+			b.lastMove.y1 != centerline + 2 * direction ||
+			b.lastMove.x1 != m.x2 ||
+			b.lastMove.y2 != centerline {
 			return false
 		}
 
