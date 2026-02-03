@@ -103,9 +103,16 @@ func (b *Board) Move(move Move) {
 		*b.At(move.X2, move.Y1) = PieceNone;
 	}
 
-	if b.WillBeShortCastle(move) {
-		*b.At(move.X2 - 1, move.Y2) = *b.At(move.X2 + 1, move.Y2);
-		*b.At(move.X2 + 1, move.Y2) = PieceNone;
+	if b.WillBeCastle(move) {
+		direction := Sign(move.X2 - move.X1)
+		var rookX int
+		if direction < 0 {
+			rookX = 0
+		} else {
+			rookX = 7
+		}
+		*b.At(move.X2 - direction, move.Y2) = *b.At(rookX, move.Y2);
+		*b.At(rookX, move.Y2) = PieceNone;
 	}
 
 	*b.At(move.X2, move.Y2) = *b.At(move.X1, move.Y1)
@@ -151,11 +158,12 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 	}
 }
 
-func (b *Board) WillBeShortCastle(m Move) bool {
+func (b *Board) WillBeCastle(m Move) bool {
 	// NEXT check attack on passed square
 	var backline int
 	this_side := b.Turn
 	opposite_side := 1 - b.Turn
+	direction := Sign(m.X2 - m.X1)
 	if b.Turn == SideWhite {
 		if b.H1Moved || b.E1Moved {
 			return false
@@ -168,9 +176,9 @@ func (b *Board) WillBeShortCastle(m Move) bool {
 		backline = 0
 	}
 
-	if (m != NewMove(4, backline, 6, backline) ||
-		*b.At(5, backline) != PieceNone ||
-		*b.At(6, backline) != PieceNone) {
+	if (m != NewMove(4, backline, 4 + 2 * direction, backline) ||
+		*b.At(4 + direction, backline) != PieceNone ||
+		*b.At(4 + 2 * direction, backline) != PieceNone) {
 		return false
 	}
 
@@ -179,7 +187,7 @@ func (b *Board) WillBeShortCastle(m Move) bool {
 	for x := range BoardW {
 		for y := range BoardH {
 			piece := *b.At(x, y)
-			if piece.Is(opposite_side) && b.IsMoveLegal(NewMove(x, y, 5, backline)) {
+			if piece.Is(opposite_side) && b.IsMoveLegal(NewMove(x, y, 4 + direction, backline)) {
 				return false
 			}
 		}
@@ -196,7 +204,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 	}
 
 	if b.WillBeEnPassant(m) ||
-		b.WillBeShortCastle(m) {
+		b.WillBeCastle(m) {
 		return true
 	}
 
