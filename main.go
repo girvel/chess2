@@ -116,8 +116,7 @@ func main() {
 		rl.EndDrawing()
 
 		if board.Turn == chess2.SideBlack {
-			select {
-			case bestResponse := <-moveChannel:
+			if bestResponse, ok := <-moveChannel; ok {
 				println(bestResponse.String())
 				board.Move(bestResponse)
 			}
