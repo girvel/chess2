@@ -99,15 +99,6 @@ func NewMove(x1, y1, x2, y2 int) Move {
 }
 
 func (b *Board) Move(move Move) {
-	switch {
-	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true;
-	case move.X1 == 4 && move.Y1 == 0: b.E8Moved = true;
-	case move.X1 == 7 && move.Y1 == 0: b.H8Moved = true;
-	case move.X1 == 0 && move.Y1 == 7: b.A1Moved = true;
-	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
-	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
-	}
-
 	if b.WillBeEnPassant(move) {
 		*b.At(move.X2, move.Y1) = PieceNone;
 	}
@@ -121,8 +112,18 @@ func (b *Board) Move(move Move) {
 	*b.At(move.X1, move.Y1) = PieceNone
 	b.Turn = 1 - b.Turn
 	b.LastMove = move
+
+	switch {
+	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true;
+	case move.X1 == 4 && move.Y1 == 0: b.E8Moved = true;
+	case move.X1 == 7 && move.Y1 == 0: b.H8Moved = true;
+	case move.X1 == 0 && move.Y1 == 7: b.A1Moved = true;
+	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
+	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
+	}
 }
 
+// TODO split detection & validation
 func (b *Board) WillBeEnPassant(m Move) bool {
 	source := *b.At(m.X1, m.X2)
 	if source != PieceWhitePawn && source != PieceBlackPawn {
@@ -152,31 +153,60 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 func (b *Board) WillBeShortCastle(m Move) bool {
 	// NEXT check attack on passed square
 	if b.Turn == SideWhite {
-		return !(m != NewMove(4, 7, 6, 7) ||
+		if (m != NewMove(4, 7, 6, 7) ||
 			*b.At(4, 7) != PieceWhiteKing ||
 			*b.At(5, 7) != PieceNone ||
 			*b.At(6, 7) != PieceNone ||
 			b.H1Moved ||
-			b.E1Moved)
+			b.E1Moved) {
+			return false
+		}
+
+		b.Turn = SideBlack
+		for x := range BoardW {
+			for y := range BoardH {
+				piece := *b.At(x, y)
+				if piece.Is(SideBlack) && b.IsMoveLegal(NewMove(x, y, 5, 7)) {
+					return false
+				}
+			}
+		}
+		b.Turn = SideWhite
 	} else {
-		return !(m != NewMove(4, 0, 6, 0) ||
+		if (m != NewMove(4, 0, 6, 0) ||
 			*b.At(4, 0) != PieceBlackKing ||
 			*b.At(5, 0) != PieceNone ||
 			*b.At(6, 0) != PieceNone ||
 			b.H8Moved ||
-			b.E8Moved)
+			b.E8Moved) {
+			return false
+		}
+
+		b.Turn = SideWhite
+		for x := range BoardW {
+			for y := range BoardH {
+				piece := *b.At(x, y)
+				if piece.Is(SideWhite) && b.IsMoveLegal(NewMove(x, y, 5, 0)) {
+					return false
+				}
+			}
+		}
+		b.Turn = SideBlack
 	}
+
+	return true
 }
 
+// TODO should it check for turn?
 func (b *Board) IsMoveLegal(m Move) bool {
-	if b.WillBeEnPassant(m) ||
-		b.WillBeShortCastle(m) {
-		return true
-	}
-
 	if (m.X1 < 0 || m.X2 < 0 || m.Y1 < 0 || m.Y2 < 0 ||
 		m.X1 >= BoardW || m.X2 >= BoardW || m.Y1 >= BoardH || m.Y2 >= BoardH) {
 		return false
+	}
+
+	if b.WillBeEnPassant(m) ||
+		b.WillBeShortCastle(m) {
+		return true
 	}
 
 	source := *b.At(m.X1, m.Y1)
