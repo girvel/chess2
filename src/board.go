@@ -292,7 +292,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 	
 	case PieceWhiteKing, PieceBlackKing:
-		return Abs(ox) * Abs(oy) <= 1
+		return Abs(ox) <= 1 && Abs(oy) <= 1
 	
 	case PieceWhiteQueen, PieceBlackQueen:
 		if Abs(ox) != Abs(oy) && (ox != 0) == (oy != 0) {

@@ -8,19 +8,20 @@ import (
 const scale int = 4
 const cellSize int = 16
 const totalCellSize int = scale * cellSize
+const windowSize = chess2.BoardSize * totalCellSize
 
 var colorWhite rl.Color = rl.GetColor(0xedededff)
 var colorBlack rl.Color = rl.GetColor(0x3a373dff)
 var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
 
-func LoadWhitePiece(filepath string) rl.Texture2D {
+func LoadSprite(filepath string) rl.Texture2D {
 	image := rl.LoadImage(filepath)
 	defer rl.UnloadImage(image)
 	rl.ImageResizeNN(image, image.Width * int32(scale), image.Height * int32(scale))
 	return rl.LoadTextureFromImage(image)
 }
 
-func LoadBlackPiece(filepath string) rl.Texture2D {
+func LoadSpriteColored(filepath string) rl.Texture2D {
 	image := rl.LoadImage(filepath)
 	defer rl.UnloadImage(image)
 	rl.ImageColorReplace(image, colorWhite, colorBlack)
@@ -29,29 +30,31 @@ func LoadBlackPiece(filepath string) rl.Texture2D {
 }
 
 func main() {
-	rl.InitWindow(int32(chess2.BoardSize * totalCellSize), int32(chess2.BoardSize * totalCellSize), "girvel's chess app")
+	rl.InitWindow(int32(windowSize), int32(windowSize), "girvel's chess app")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	board := chess2.EmptyBoard()
 
 	sprites := []rl.Texture2D{
-		LoadWhitePiece("sprites/none.png"),
-		LoadWhitePiece("sprites/pawn.png"),
-		LoadBlackPiece("sprites/pawn.png"),
-		LoadWhitePiece("sprites/knight.png"),
-		LoadBlackPiece("sprites/knight.png"),
-		LoadWhitePiece("sprites/bishop.png"),
-		LoadBlackPiece("sprites/bishop.png"),
-		LoadWhitePiece("sprites/rook.png"),
-		LoadBlackPiece("sprites/rook.png"),
-		LoadWhitePiece("sprites/queen.png"),
-		LoadBlackPiece("sprites/queen.png"),
-		LoadWhitePiece("sprites/king.png"),
-		LoadBlackPiece("sprites/king.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/pawn.png"),
+		LoadSpriteColored("sprites/pawn.png"),
+		LoadSprite("sprites/knight.png"),
+		LoadSpriteColored("sprites/knight.png"),
+		LoadSprite("sprites/bishop.png"),
+		LoadSpriteColored("sprites/bishop.png"),
+		LoadSprite("sprites/rook.png"),
+		LoadSpriteColored("sprites/rook.png"),
+		LoadSprite("sprites/queen.png"),
+		LoadSpriteColored("sprites/queen.png"),
+		LoadSprite("sprites/king.png"),
+		LoadSpriteColored("sprites/king.png"),
 	}
 
-	moveSprite := LoadWhitePiece("sprites/move.png")
+	moveSprite := LoadSprite("sprites/move.png")
+	winSprite := LoadSprite("sprites/win.png")
+	lossSprite := LoadSprite("sprites/loss.png")
 
 	var selectedX, selectedY int
 	var potentialMoves []chess2.Move
@@ -94,6 +97,20 @@ func main() {
 					rl.White,
 				)
 			}
+		}
+
+		if board.Winner != chess2.SideNone {
+			var texture rl.Texture2D
+			switch board.Winner {
+			case chess2.SideWhite: texture = winSprite;
+			case chess2.SideBlack: texture = lossSprite;
+			}
+
+			rl.DrawTexture(
+				texture,
+				(int32(windowSize) - texture.Width) / 2, (int32(windowSize) - texture.Height) / 2,
+				rl.White,
+			)
 		}
 		rl.EndDrawing()
 
