@@ -59,6 +59,7 @@ func main() {
 	var selectedX, selectedY int
 	var potentialMoves []chess2.Move
 	isSelected := false
+	moveChannel := make(chan chess2.Move)
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -114,6 +115,15 @@ func main() {
 		}
 		rl.EndDrawing()
 
+		if board.Turn == chess2.SideBlack {
+			select {
+			case bestResponse := <-moveChannel:
+				println(bestResponse.String())
+				board.Move(bestResponse)
+			}
+			continue
+		}
+
 		if board.Winner != chess2.SideNone {
 			continue
 		}
@@ -126,9 +136,9 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
-					bestResponse := chess2.BestMove(*board, 3)
-					println(bestResponse.String())
-					board.Move(bestResponse)
+					go func() {
+						moveChannel <- chess2.BestMove(*board, 3)
+					}()
 				}
 				isSelected = false
 			} else {
