@@ -128,6 +128,10 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 	}
 }
 
+func (b *Board) WillBeShortCastle(m Move) bool {
+	
+}
+
 func (b *Board) IsMoveLegal(m Move) bool {
 	if (m.X1 < 0 || m.X2 < 0 || m.Y1 < 0 || m.Y2 < 0 ||
 		m.X1 >= BoardW || m.X2 >= BoardW || m.Y1 >= BoardH || m.Y2 >= BoardH) {
