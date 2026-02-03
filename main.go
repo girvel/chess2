@@ -320,7 +320,7 @@ func main() {
 				}
 				isSelected = false
 			} else {
-				if *board.At(x, y) != PieceNone {
+				if board.At(x, y).Is(board.turn) {
 					selectedX = x
 					selectedY = y
 					isSelected = true
