@@ -4,8 +4,7 @@ import (
 	"fmt"
 )
 
-const BoardW int = 8
-const BoardH int = 8
+const BoardSize int = 8
 
 type Side int
 
@@ -42,7 +41,7 @@ func (p Piece) Side() Side {
 }
 
 type Board struct {
-	inner [BoardW * BoardH]Piece
+	inner [BoardSize * BoardSize]Piece
 	Turn Side
 	LastMove Move
 	A1Moved, A8Moved, E1Moved, E8Moved, H1Moved, H8Moved bool
@@ -92,10 +91,10 @@ func EmptyBoard() *Board {
 }
 
 func (b *Board) At(x, y int) *Piece {
-	if x < 0 || y < 0 || x >= BoardW || y >= BoardW {
+	if x < 0 || y < 0 || x >= BoardSize || y >= BoardSize {
 		panic(fmt.Sprintf("attempt to access (%d, %d)", x, y))
 	}
-	return &b.inner[x + y * BoardW]
+	return &b.inner[x + y * BoardSize]
 }
 
 type Move struct {
@@ -191,8 +190,8 @@ func (b *Board) WillBeCastle(m Move) bool {
 
 	b.Turn = opposite_side
 	defer func() {b.Turn = this_side}()
-	for x := range BoardW {
-		for y := range BoardH {
+	for x := range BoardSize {
+		for y := range BoardSize {
 			piece := *b.At(x, y)
 			if piece.Is(opposite_side) && b.IsMoveLegal(NewMove(x, y, 4 + direction, backline)) {
 				return false
@@ -206,7 +205,7 @@ func (b *Board) WillBeCastle(m Move) bool {
 // TODO should it check for turn?
 func (b *Board) IsMoveLegal(m Move) bool {
 	if (m.X1 < 0 || m.X2 < 0 || m.Y1 < 0 || m.Y2 < 0 ||
-		m.X1 >= BoardW || m.X2 >= BoardW || m.Y1 >= BoardH || m.Y2 >= BoardH) {
+		m.X1 >= BoardSize || m.X2 >= BoardSize || m.Y1 >= BoardSize || m.Y2 >= BoardSize) {
 		return false
 	}
 
@@ -265,7 +264,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 	
 	case PieceWhiteKing, PieceBlackKing:
-		return Abs(ox) * Abs(oy) == 1
+		return Abs(ox) * Abs(oy) <= 1
 	
 	case PieceWhiteQueen, PieceBlackQueen:
 		if Abs(ox) != Abs(oy) && (ox != 0) == (oy != 0) {
@@ -312,20 +311,36 @@ func (b *Board) GetMoves(x, y int) []Move {
 		potential = append(potential, NewMove(x, y, x - 2, y - 1))
 
 	case PieceWhiteBishop, PieceBlackBishop:
-		for _, dx := range []int{-1, 1} {
-			for _, dy := range []int{-1, 1} {
-				x1 := x
-				y1 := y
-				for {
-					x1 += dx
-					y1 += dy
-					if x1 < 0 || y1 < 0 || x1 >= BoardW || y1 >= BoardH {
-						break
-					}
-					potential = append(potential, NewMove(x, y, x1, y1))
-				}
-			}
+		for v := range BoardSize {
+			potential = append(potential, NewMove(x, y, v, v - x + y))
+			potential = append(potential, NewMove(x, y, v, -v + x + y))
 		}
+
+	case PieceWhiteRook, PieceBlackRook:
+		for v := range BoardSize {
+			potential = append(potential, NewMove(x, y, v, y))
+			potential = append(potential, NewMove(x, y, x, v))
+		}
+	
+	case PieceWhiteQueen, PieceBlackQueen:
+		for v := range BoardSize {
+			potential = append(potential, NewMove(x, y, v, y))
+			potential = append(potential, NewMove(x, y, x, v))
+			potential = append(potential, NewMove(x, y, v, v - x + y))
+			potential = append(potential, NewMove(x, y, v, -v + x + y))
+		}
+	
+	case PieceWhiteKing, PieceBlackKing:
+		potential = append(potential, NewMove(x, y, x + 1, y + 1))
+		potential = append(potential, NewMove(x, y, x + 1, y))
+		potential = append(potential, NewMove(x, y, x + 2, y))
+		potential = append(potential, NewMove(x, y, x + 1, y - 1))
+		potential = append(potential, NewMove(x, y, x, y + 1))
+		potential = append(potential, NewMove(x, y, x, y - 1))
+		potential = append(potential, NewMove(x, y, x - 1, y + 1))
+		potential = append(potential, NewMove(x, y, x - 1, y))
+		potential = append(potential, NewMove(x, y, x - 2, y))
+		potential = append(potential, NewMove(x, y, x - 1, y - 1))
 	}
 
 	var result []Move = make([]Move, 0, len(potential))

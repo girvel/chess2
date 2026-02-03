@@ -29,7 +29,7 @@ func LoadBlackPiece(filepath string) rl.Texture2D {
 }
 
 func main() {
-	rl.InitWindow(int32(chess2.BoardW * totalCellSize), int32(chess2.BoardH * totalCellSize), "girvel's chess app")
+	rl.InitWindow(int32(chess2.BoardSize * totalCellSize), int32(chess2.BoardSize * totalCellSize), "girvel's chess app")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
@@ -59,8 +59,8 @@ func main() {
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
-		for x := range chess2.BoardW {
-			for y := range chess2.BoardH {
+		for x := range chess2.BoardSize {
+			for y := range chess2.BoardSize {
 				var squareColor rl.Color
 				switch {
 				case isSelected && x == selectedX && y == selectedY:
