@@ -37,6 +37,7 @@ type Board struct {
 	inner [BoardW * BoardH]Piece
 	Turn Side
 	LastMove Move
+	A1Moved, A8Moved, E1Moved, E8Moved, H1Moved, H8Moved bool
 }
 
 func EmptyBoard() *Board {
@@ -98,9 +99,24 @@ func NewMove(x1, y1, x2, y2 int) Move {
 }
 
 func (b *Board) Move(move Move) {
+	switch {
+	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true;
+	case move.X1 == 4 && move.Y1 == 0: b.E8Moved = true;
+	case move.X1 == 7 && move.Y1 == 0: b.H8Moved = true;
+	case move.X1 == 0 && move.Y1 == 7: b.A1Moved = true;
+	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
+	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
+	}
+
 	if b.WillBeEnPassant(move) {
 		*b.At(move.X2, move.Y1) = PieceNone;
 	}
+
+	if b.WillBeShortCastle(move) {
+		*b.At(move.X2 - 1, move.Y2) = *b.At(move.X2 + 1, move.Y2);
+		*b.At(move.X2 + 1, move.Y2) = PieceNone;
+	}
+
 	*b.At(move.X2, move.Y2) = *b.At(move.X1, move.Y1)
 	*b.At(move.X1, move.Y1) = PieceNone
 	b.Turn = 1 - b.Turn
@@ -108,6 +124,11 @@ func (b *Board) Move(move Move) {
 }
 
 func (b *Board) WillBeEnPassant(m Move) bool {
+	source := *b.At(m.X1, m.X2)
+	if source != PieceWhitePawn && source != PieceBlackPawn {
+		return false
+	}
+
 	direction := int(1 - 2 * b.Turn)
 	centerline := int(4 - b.Turn)
 	if m.Y1 != centerline ||
@@ -129,10 +150,30 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 }
 
 func (b *Board) WillBeShortCastle(m Move) bool {
-	
+	// NEXT check attack on passed square
+	if b.Turn == SideWhite {
+		return !(m != NewMove(4, 7, 6, 7) ||
+			*b.At(4, 7) != PieceWhiteKing ||
+			*b.At(5, 7) != PieceNone ||
+			*b.At(6, 7) != PieceNone ||
+			b.H1Moved ||
+			b.E1Moved)
+	} else {
+		return !(m != NewMove(4, 0, 6, 0) ||
+			*b.At(4, 0) != PieceBlackKing ||
+			*b.At(5, 0) != PieceNone ||
+			*b.At(6, 0) != PieceNone ||
+			b.H8Moved ||
+			b.E8Moved)
+	}
 }
 
 func (b *Board) IsMoveLegal(m Move) bool {
+	if b.WillBeEnPassant(m) ||
+		b.WillBeShortCastle(m) {
+		return true
+	}
+
 	if (m.X1 < 0 || m.X2 < 0 || m.Y1 < 0 || m.Y2 < 0 ||
 		m.X1 >= BoardW || m.X2 >= BoardW || m.Y1 >= BoardH || m.Y2 >= BoardH) {
 		return false
@@ -169,7 +210,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 			return true
 		}
 
-		return b.WillBeEnPassant(m)
+		return false
 	}
 
 	ox := m.X2 - m.X1
@@ -190,7 +231,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 	
 	case PieceWhiteKing, PieceBlackKing:
-		return Abs(ox) == 1 && Abs(oy) == 1
+		return Abs(ox) == 1 || Abs(oy) == 1
 	
 	case PieceWhiteQueen, PieceBlackQueen:
 		if Abs(ox) != Abs(oy) && (ox != 0) == (oy != 0) {
