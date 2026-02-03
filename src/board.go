@@ -145,6 +145,8 @@ func (b *Board) Move(move Move) {
 	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
 	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
 	}
+
+	println(Evaluate(*b))
 }
 
 // TODO split detection & validation
