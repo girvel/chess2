@@ -1,5 +1,10 @@
 package chess2
 
+import (
+	"context"
+	"time"
+)
+
 var cost = []float64{
 	0,
 	1, -1,
@@ -64,4 +69,29 @@ func BestMove(b Board, depth int) Move {
 	}
 
 	return result
+}
+
+func SearchBestMove(b Board, out chan Move) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 2)
+	defer cancel()
+
+	var result Move
+	depth := 0
+	loop: for {
+		depth += 1
+		resultChannel := make(chan Move)
+		go func() {
+			resultChannel <- BestMove(b, depth)
+		}()
+
+		select {
+		case <-ctx.Done():
+			depth--
+			break loop
+		case m := <-resultChannel:
+			result = m
+		}
+	}
+	out <- result
+	println("Depth", depth)
 }
