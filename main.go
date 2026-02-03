@@ -126,7 +126,7 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
-					bestResponse := chess2.BestMove(*board, 1)
+					bestResponse := chess2.BestMove(*board, 3)
 					println(bestResponse.String())
 					board.Move(bestResponse)
 				}

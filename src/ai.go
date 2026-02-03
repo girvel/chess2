@@ -42,13 +42,19 @@ func BestMove(b Board, depth int) Move {
 			}
 
 			for _, m := range b.GetMoves(x, y) {
-				score := Evaluate(*b.Apply(m))
+				nextBoard := *b.Apply(m)
+				if depth > 0 {
+					nextBoard = *nextBoard.Apply(BestMove(nextBoard, depth - 1))
+				}
+				score := Evaluate(nextBoard)
+
 				var condition bool
 				if isMaximizing {
 					condition = score > bestScore
 				} else {
 					condition = score < bestScore
 				}
+
 				if condition {
 					bestScore = score
 					result = m
