@@ -30,6 +30,7 @@ const h int = 8
 
 var colorWhite rl.Color = rl.GetColor(0xedededff)
 var colorBlack rl.Color = rl.GetColor(0x3a373dff)
+var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
 
 type Side int
 
@@ -260,11 +261,15 @@ func main() {
 		for x := range w {
 			for y := range h {
 				var squareColor rl.Color
-				if (x + y) % 2 == 0 {
+				switch {
+				case isSelected && x == selectedX && y == selectedY:
+					squareColor = colorSelected
+				case (x + y) % 2 == 0:
 					squareColor = colorWhite
-				} else {
+				default:
 					squareColor = colorBlack
 				}
+
 				render_x := int32(x * totalCellSize)
 				render_y := int32(y * totalCellSize)
 				rl.DrawRectangle(
