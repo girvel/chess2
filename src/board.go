@@ -302,6 +302,32 @@ func (b *Board) GetMoves(x, y int) []Move {
 		potential = append(potential, NewMove(x, y, x, y + 2 * direction))
 		potential = append(potential, NewMove(x, y, x + 1, y + direction))
 		potential = append(potential, NewMove(x, y, x - 1, y + direction))
+
+	case PieceWhiteKnight, PieceBlackKnight:
+		potential = append(potential, NewMove(x, y, x + 1, y + 2))
+		potential = append(potential, NewMove(x, y, x + 1, y - 2))
+		potential = append(potential, NewMove(x, y, x - 1, y + 2))
+		potential = append(potential, NewMove(x, y, x - 1, y - 2))
+		potential = append(potential, NewMove(x, y, x + 2, y + 1))
+		potential = append(potential, NewMove(x, y, x + 2, y - 1))
+		potential = append(potential, NewMove(x, y, x - 2, y + 1))
+		potential = append(potential, NewMove(x, y, x - 2, y - 1))
+
+	case PieceWhiteBishop, PieceBlackBishop:
+		for _, dx := range []int{-1, 1} {
+			for _, dy := range []int{-1, 1} {
+				x1 := x
+				y1 := y
+				for {
+					x1 += dx
+					y1 += dy
+					if x1 < 0 || y1 < 0 || x1 >= BoardW || y1 >= BoardH {
+						break
+					}
+					potential = append(potential, NewMove(x, y, x1, y1))
+				}
+			}
+		}
 	}
 
 	var result []Move = make([]Move, 0, len(potential))
