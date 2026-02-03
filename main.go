@@ -11,8 +11,13 @@ const totalCellSize int = scale * cellSize
 const w int = 8
 const h int = 8
 
-var white rl.Color = rl.GetColor(0xedededff)
-var black rl.Color = rl.GetColor(0x3a373dff)
+var colorWhite rl.Color = rl.GetColor(0xedededff)
+var colorBlack rl.Color = rl.GetColor(0x3a373dff)
+
+type Side int
+
+const black Side = 0
+const white Side = 1
 
 type Piece int
 const (
@@ -30,6 +35,10 @@ const (
 	PieceWhiteKing
 	PieceBlackKing
 )
+
+func (p Piece) Is(side Side) bool {
+	return p != PieceNone && int(p) % 2 == int(side)
+}
 
 type Board struct {
 	inner [w * h]Piece
@@ -81,9 +90,29 @@ func (b *Board) At(x, y int) *Piece {
 	return &b.inner[x + y * w]
 }
 
-func (b *Board) Move(x1, y1, x2, y2 int) {
-	*b.At(x2, y2) = *b.At(x1, y1)
-	*b.At(x1, y1) = PieceNone
+type Move struct {
+	x1, y1, x2, y2 int
+}
+
+func (b *Board) Move(move Move) {
+	*b.At(move.x2, move.y2) = *b.At(move.x1, move.y1)
+	*b.At(move.x1, move.y1) = PieceNone
+}
+
+func (b *Board) IsMoveLegal(m Move) bool {
+	if (m.x1 < 0 || m.x2 < 0 || m.y1 < 0 || m.y2 < 0 ||
+		m.x1 >= w || m.x2 >= w || m.y1 >= h || m.y2 >= h) {
+		return false
+	}
+
+	dest := *b.At(m.x2, m.y2)
+	switch *b.At(m.x1, m.y1) {
+	case PieceWhitePawn:
+		return m.x2 == m.x1 && m.y2 == m.y1 - 1 && dest == PieceNone ||
+			m.y1 == 6 && m.y2 == 4 && m.x1 == m.x2 && dest == PieceNone && *b.At(m.x2, m.y1 - 1) == PieceNone ||
+			(m.x2 == m.x1 - 1 || m.x2 == m.x1 + 1) && m.y2 == m.y1 - 1 && dest.Is(black)
+	}
+	return false
 }
 
 func LoadWhitePiece(filepath string) rl.Texture2D {
@@ -96,7 +125,7 @@ func LoadWhitePiece(filepath string) rl.Texture2D {
 func LoadBlackPiece(filepath string) rl.Texture2D {
 	image := rl.LoadImage(filepath)
 	defer rl.UnloadImage(image)
-	rl.ImageColorReplace(image, white, black)
+	rl.ImageColorReplace(image, colorWhite, colorBlack)
 	rl.ImageResizeNN(image, image.Width * int32(scale), image.Height * int32(scale))
 	return rl.LoadTextureFromImage(image)
 }
@@ -133,9 +162,9 @@ func main() {
 			for y := range h {
 				var squareColor rl.Color
 				if (x + y) % 2 == 0 {
-					squareColor = white
+					squareColor = colorWhite
 				} else {
-					squareColor = black
+					squareColor = colorBlack
 				}
 				render_x := int32(x * totalCellSize)
 				render_y := int32(y * totalCellSize)
@@ -158,7 +187,10 @@ func main() {
 			y := int(rl.GetMouseY()) / totalCellSize
 
 			if isSelected {
-				board.Move(selectedX, selectedY, x, y)
+				move := Move{selectedX, selectedY, x, y}
+				if board.IsMoveLegal(move) {
+					board.Move(move)
+				}
 				isSelected = false
 			} else {
 				if *board.At(x, y) != PieceNone {
