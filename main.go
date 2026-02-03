@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"time"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 	chess2 "github.com/girvel/chess2/src"
 )
@@ -116,9 +119,11 @@ func main() {
 		rl.EndDrawing()
 
 		if board.Turn == chess2.SideBlack {
-			if bestResponse, ok := <-moveChannel; ok {
+			select {
+			case bestResponse := <-moveChannel:
 				println(bestResponse.String())
 				board.Move(bestResponse)
+			default:
 			}
 			continue
 		}
@@ -136,7 +141,27 @@ func main() {
 				if board.IsMoveLegal(move) {
 					board.Move(move)
 					go func() {
-						moveChannel <- chess2.BestMove(*board, 3)
+						ctx, cancel := context.WithTimeout(context.Background(), time.Second * 2)
+						defer cancel()
+						var result chess2.Move
+						depth := 0
+						loop: for {
+							depth += 1
+							resultChannel := make(chan chess2.Move)
+							go func() {
+								resultChannel <- chess2.BestMove(*board, depth)
+							}()
+
+							select {
+							case <-ctx.Done():
+								depth--
+								break loop
+							case m := <-resultChannel:
+								result = m
+							}
+						}
+						moveChannel <- result
+						println("Depth", depth)
 					}()
 				}
 				isSelected = false

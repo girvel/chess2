@@ -29,9 +29,9 @@ func BestMove(b Board, depth int) Move {
 	var bestScore float64
 	isMaximizing := b.Turn == SideWhite
 	if isMaximizing {
-		bestScore = -1000
+		bestScore = -1000000
 	} else {
-		bestScore = 1000
+		bestScore = 1000000
 	}
 
 	for x := range BoardSize {
