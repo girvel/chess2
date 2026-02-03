@@ -263,7 +263,8 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 
 		if (m.X2 == m.X1 - 1 || m.X2 == m.X1 + 1) && 
-			m.Y2 == m.Y1 + direction {
+			m.Y2 == m.Y1 + direction &&
+			dest.Side() == 1 - b.Turn {
 			return true
 		}
 
