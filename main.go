@@ -109,10 +109,34 @@ type Move struct {
 // }
 
 func (b *Board) Move(move Move) {
+	if b.WillBeEnPassant(move) {
+		*b.At(move.x2, move.y1) = PieceNone;
+	}
 	*b.At(move.x2, move.y2) = *b.At(move.x1, move.y1)
 	*b.At(move.x1, move.y1) = PieceNone
 	b.turn = 1 - b.turn
 	b.lastMove = move
+}
+
+func (b *Board) WillBeEnPassant(m Move) bool {
+	direction := int(1 - 2 * b.turn)
+	centerline := int(4 - b.turn)
+	if m.y1 != centerline ||
+		m.y2 != centerline + direction ||
+		abs(m.x2 - m.x1) != 1 ||
+		b.lastMove.y1 != centerline + 2 * direction ||
+		b.lastMove.x1 != m.x2 ||
+		b.lastMove.y2 != centerline ||
+		*b.At(m.x2, m.y2) != PieceNone {
+		return false
+	}
+
+	neighbor := *b.At(m.x2, m.y1)
+	if b.turn == white {
+		return neighbor == PieceBlackPawn
+	} else {
+		return neighbor == PieceWhitePawn
+	}
 }
 
 func (b *Board) IsMoveLegal(m Move) bool {
@@ -152,22 +176,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 			return true
 		}
 
-		centerline := int(4 - b.turn)
-		if m.y1 != centerline ||
-			m.y2 != centerline + direction ||
-			abs(m.x2 - m.x1) != 1 ||
-			b.lastMove.y1 != centerline + 2 * direction ||
-			b.lastMove.x1 != m.x2 ||
-			b.lastMove.y2 != centerline {
-			return false
-		}
-
-		neighbor := *b.At(m.x2, m.y1)
-		if b.turn == white {
-			return neighbor == PieceBlackPawn
-		} else {
-			return neighbor == PieceWhitePawn
-		}
+		return b.WillBeEnPassant(m)
 	}
 	return false
 }
