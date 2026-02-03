@@ -205,10 +205,32 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		for {
 			x += dx
 			y += dy
+			piece := *b.At(x, y)
 			if x == m.x2 {
-				return true
+				return !piece.Is(b.turn)
 			}
-			if *b.At(x, y) != PieceNone {
+			if piece != PieceNone {
+				return false
+			}
+		}
+	
+	case PieceWhiteRook, PieceBlackRook:
+		if (m.x2 - m.x1 != 0) == (m.y2 - m.y1 != 0) {
+			return false
+		}
+
+		dx := sign(m.x2 - m.x1)
+		dy := sign(m.y2 - m.y1)
+		x := m.x1
+		y := m.y1
+		for {
+			x += dx
+			y += dy
+			piece := *b.At(x, y)
+			if x == m.x2 && y == m.y2 {
+				return !piece.Is(b.turn)
+			}
+			if piece != PieceNone {
 				return false
 			}
 		}
