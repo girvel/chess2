@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -9,6 +11,14 @@ func abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func sign(x int) int {
+	switch {
+	case x == 0: return 0
+	case x < 0: return -1
+	default: return 1
+	}
 }
 
 const scale int = 4
@@ -97,6 +107,9 @@ func EmptyBoard() *Board {
 }
 
 func (b *Board) At(x, y int) *Piece {
+	if x < 0 || y < 0 || x >= w || y >= w {
+		panic(fmt.Sprintf("attempt to access (%d, %d)", x, y))
+	}
 	return &b.inner[x + y * w]
 }
 
@@ -177,6 +190,26 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 
 		return b.WillBeEnPassant(m)
+
+	case PieceWhiteBishop, PieceBlackBishop:
+		if abs(m.x2 - m.x1) != abs(m.y2 - m.y1) {
+			return false
+		}
+
+		dx := sign(m.x2 - m.x1)
+		dy := sign(m.y2 - m.y1)
+		x := m.x1
+		y := m.y1
+		for {
+			x += dx
+			y += dy
+			if x == m.x2 {
+				return true
+			}
+			if *b.At(x, y) != PieceNone {
+				return false
+			}
+		}
 	}
 	return false
 }
