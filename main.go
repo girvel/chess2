@@ -51,7 +51,10 @@ func main() {
 		LoadBlackPiece("sprites/king.png"),
 	}
 
+	moveSprite := LoadWhitePiece("sprites/move.png")
+
 	var selectedX, selectedY int
+	var potentialMoves []chess2.Move
 	isSelected := false
 
 	for !rl.WindowShouldClose() {
@@ -82,6 +85,16 @@ func main() {
 				}
 			}
 		}
+
+		if isSelected {
+			for _, m := range potentialMoves {
+				rl.DrawTexture(
+					moveSprite,
+					int32(m.X2 * totalCellSize), int32(m.Y2 * totalCellSize),
+					rl.White,
+				)
+			}
+		}
 		rl.EndDrawing()
 
 		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
@@ -99,6 +112,7 @@ func main() {
 					selectedX = x
 					selectedY = y
 					isSelected = true
+					potentialMoves = board.GetMoves(x, y)
 				}
 			}
 		}

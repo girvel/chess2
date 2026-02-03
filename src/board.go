@@ -11,6 +11,7 @@ type Side int
 
 const SideBlack Side = 0
 const SideWhite Side = 1
+const SideNone Side = -1
 
 type Piece int
 const (
@@ -31,6 +32,13 @@ const (
 
 func (p Piece) Is(side Side) bool {
 	return p != PieceNone && int(p) % 2 == int(side)
+}
+
+func (p Piece) Side() Side {
+	switch p {
+		case PieceNone: return SideNone
+		default: return Side(p % 2)
+	}
 }
 
 type Board struct {
@@ -283,5 +291,28 @@ func (b *Board) IsMoveLegal(m Move) bool {
 			return false
 		}
 	}
+}
+
+func (b *Board) GetMoves(x, y int) []Move {
+	var potential []Move
+	source := *b.At(x, y)
+	switch source {
+	case PieceWhitePawn, PieceBlackPawn:
+		direction := int(1 - source.Side() * 2)
+		potential = append(potential, NewMove(x, y, x, y + direction))
+		potential = append(potential, NewMove(x, y, x, y + 2 * direction))
+		potential = append(potential, NewMove(x, y, x + 1, y + direction))
+		potential = append(potential, NewMove(x, y, x - 1, y + direction))
+	}
+
+	var result []Move = make([]Move, 0, len(potential))
+	for _, m := range potential {
+		if b.IsMoveLegal(m) {
+			result = append(result, m)
+		}
+	}
+
+	println(result)
+	return result
 }
 
