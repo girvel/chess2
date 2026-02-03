@@ -166,54 +166,40 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 
 		return b.WillBeEnPassant(m)
+	}
 
+	ox := m.X2 - m.X1
+	oy := m.Y2 - m.Y1
+
+	switch source {
 	case PieceWhiteKnight, PieceBlackKnight:
-		x := m.X2 - m.X1
-		y := m.Y2 - m.Y1
-		return Abs(y) == 3 - Abs(x) && x != 0 && y != 0
+		return Abs(oy) == 3 - Abs(ox) && ox != 0 && oy != 0
 
 	case PieceWhiteBishop, PieceBlackBishop:
-		if Abs(m.X2 - m.X1) != Abs(m.Y2 - m.Y1) {
+		if Abs(ox) != Abs(oy) {
 			return false
-		}
-
-		dx := Sign(m.X2 - m.X1)
-		dy := Sign(m.Y2 - m.Y1)
-		x := m.X1
-		y := m.Y1
-		for {
-			x += dx
-			y += dy
-			piece := *b.At(x, y)
-			if x == m.X2 {
-				return !piece.Is(b.Turn)
-			}
-			if piece != PieceNone {
-				return false
-			}
 		}
 	
 	case PieceWhiteRook, PieceBlackRook:
-		if (m.X2 - m.X1 != 0) == (m.Y2 - m.Y1 != 0) {
+		if (ox != 0) == (oy != 0) {
 			return false
 		}
+	}
 
-		dx := Sign(m.X2 - m.X1)
-		dy := Sign(m.Y2 - m.Y1)
-		x := m.X1
-		y := m.Y1
-		for {
-			x += dx
-			y += dy
-			piece := *b.At(x, y)
-			if x == m.X2 && y == m.Y2 {
-				return !piece.Is(b.Turn)
-			}
-			if piece != PieceNone {
-				return false
-			}
+	dx := Sign(ox)
+	dy := Sign(oy)
+	x := m.X1
+	y := m.Y1
+	for {
+		x += dx
+		y += dy
+		piece := *b.At(x, y)
+		if x == m.X2 && y == m.Y2 {
+			return !piece.Is(b.Turn)
+		}
+		if piece != PieceNone {
+			return false
 		}
 	}
-	return false
 }
 
