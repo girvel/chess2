@@ -14,6 +14,16 @@ const (
 	PieceNone Piece = iota
 	PieceWhitePawn
 	PieceBlackPawn
+	PieceWhiteKnight
+	PieceBlackKnight
+	PieceWhiteBishop
+	PieceBlackBishop
+	PieceWhiteRook
+	PieceBlackRook
+	PieceWhiteQueen
+	PieceBlackQueen
+	PieceWhiteKing
+	PieceBlackKing
 )
 
 type Board struct {
@@ -22,6 +32,16 @@ type Board struct {
 
 func EmptyBoard() *Board {
 	var result Board
+
+	*result.At(0, 0) = PieceBlackRook
+	*result.At(1, 0) = PieceBlackKnight
+	*result.At(2, 0) = PieceBlackBishop
+	*result.At(3, 0) = PieceBlackKing
+	*result.At(4, 0) = PieceBlackQueen
+	*result.At(5, 0) = PieceBlackBishop
+	*result.At(6, 0) = PieceBlackKnight
+	*result.At(7, 0) = PieceBlackRook
+
 	*result.At(0, 1) = PieceBlackPawn
 	*result.At(1, 1) = PieceBlackPawn
 	*result.At(2, 1) = PieceBlackPawn
@@ -39,6 +59,15 @@ func EmptyBoard() *Board {
 	*result.At(5, 6) = PieceWhitePawn
 	*result.At(6, 6) = PieceWhitePawn
 	*result.At(7, 6) = PieceWhitePawn
+
+	*result.At(0, 7) = PieceWhiteRook
+	*result.At(1, 7) = PieceWhiteKnight
+	*result.At(2, 7) = PieceWhiteBishop
+	*result.At(3, 7) = PieceWhiteKing
+	*result.At(4, 7) = PieceWhiteQueen
+	*result.At(5, 7) = PieceWhiteBishop
+	*result.At(6, 7) = PieceWhiteKnight
+	*result.At(7, 7) = PieceWhiteRook
 
 	return &result
 }
@@ -63,6 +92,16 @@ func main() {
 		LoadSprite("sprites/none.png"),
 		LoadSprite("sprites/white_pawn.png"),
 		LoadSprite("sprites/black_pawn.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/white_rook.png"),
+		LoadSprite("sprites/black_rook.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
+		LoadSprite("sprites/none.png"),
 	}
 
 	board := EmptyBoard()
