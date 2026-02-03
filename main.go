@@ -4,6 +4,13 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 const scale int = 4
 const cellSize int = 16
 const totalCellSize int = scale * cellSize
@@ -43,6 +50,7 @@ func (p Piece) Is(side Side) bool {
 type Board struct {
 	inner [w * h]Piece
 	turn Side
+	lastMove Move
 }
 
 func EmptyBoard() *Board {
@@ -96,10 +104,15 @@ type Move struct {
 	x1, y1, x2, y2 int
 }
 
+// func (m Move) IsExtendedPawnMove() bool {
+// 	
+// }
+
 func (b *Board) Move(move Move) {
 	*b.At(move.x2, move.y2) = *b.At(move.x1, move.y1)
 	*b.At(move.x1, move.y1) = PieceNone
 	b.turn = 1 - b.turn
+	b.lastMove = move
 }
 
 func (b *Board) IsMoveLegal(m Move) bool {
@@ -116,13 +129,44 @@ func (b *Board) IsMoveLegal(m Move) bool {
 
 	switch source {
 	case PieceWhitePawn, PieceBlackPawn:
-		other_side := 1 - b.turn
 		direction := int(1 - 2 * b.turn)
-		println(direction)
+		if m.x2 == m.x1 &&
+			m.y2 == m.y1 + direction &&
+			dest == PieceNone {
+			return true
+		}
+
 		baseline := int(1 + b.turn * 5)
-		return m.x2 == m.x1 && m.y2 == m.y1 + direction && dest == PieceNone ||
-			m.y1 == baseline && m.y2 == baseline + 2 * direction && m.x1 == m.x2 && dest == PieceNone && *b.At(m.x2, m.y1 + direction) == PieceNone ||
-			(m.x2 == m.x1 - 1 || m.x2 == m.x1 + 1) && m.y2 == m.y1 + direction && dest.Is(other_side)
+		if m.y1 == baseline &&
+			m.y2 == baseline + 2 * direction &&
+			m.x1 == m.x2 &&
+			dest == PieceNone &&
+			*b.At(m.x2, m.y1 + direction) == PieceNone {
+			return true
+		}
+
+		other_side := 1 - b.turn
+		if (m.x2 == m.x1 - 1 || m.x2 == m.x1 + 1) && 
+			m.y2 == m.y1 + direction &&
+			dest.Is(other_side) {
+			return true
+		}
+
+		centerline := int(4 - b.turn)
+		if m.y1 != centerline || m.y2 != centerline + direction {
+			return false
+		}
+
+		if abs(m.x2 - m.x1) != 1 {
+			return false
+		}
+
+		neighbor := *b.At(m.x2, m.y1)
+		if b.turn == white {
+			return neighbor == PieceBlackPawn
+		} else {
+			return neighbor == PieceWhitePawn
+		}
 	}
 	return false
 }
