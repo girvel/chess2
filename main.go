@@ -34,8 +34,8 @@ var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
 
 type Side int
 
-const black Side = 0
-const white Side = 1
+const Black Side = 0
+const White Side = 1
 
 type Piece int
 const (
@@ -66,7 +66,7 @@ type Board struct {
 
 func EmptyBoard() *Board {
 	var result Board
-	result.turn = white
+	result.turn = White
 
 	*result.At(0, 0) = PieceBlackRook
 	*result.At(1, 0) = PieceBlackKnight
@@ -146,7 +146,7 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 	}
 
 	neighbor := *b.At(m.x2, m.y1)
-	if b.turn == white {
+	if b.turn == White {
 		return neighbor == PieceBlackPawn
 	} else {
 		return neighbor == PieceWhitePawn
