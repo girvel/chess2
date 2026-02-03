@@ -42,10 +42,12 @@ func (p Piece) Is(side Side) bool {
 
 type Board struct {
 	inner [w * h]Piece
+	turn Side
 }
 
 func EmptyBoard() *Board {
 	var result Board
+	result.turn = white
 
 	*result.At(0, 0) = PieceBlackRook
 	*result.At(1, 0) = PieceBlackKnight
@@ -97,6 +99,7 @@ type Move struct {
 func (b *Board) Move(move Move) {
 	*b.At(move.x2, move.y2) = *b.At(move.x1, move.y1)
 	*b.At(move.x1, move.y1) = PieceNone
+	b.turn = 1 - b.turn
 }
 
 func (b *Board) IsMoveLegal(m Move) bool {
@@ -105,12 +108,21 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		return false
 	}
 
+	source := *b.At(m.x1, m.y1)
 	dest := *b.At(m.x2, m.y2)
-	switch *b.At(m.x1, m.y1) {
-	case PieceWhitePawn:
-		return m.x2 == m.x1 && m.y2 == m.y1 - 1 && dest == PieceNone ||
-			m.y1 == 6 && m.y2 == 4 && m.x1 == m.x2 && dest == PieceNone && *b.At(m.x2, m.y1 - 1) == PieceNone ||
-			(m.x2 == m.x1 - 1 || m.x2 == m.x1 + 1) && m.y2 == m.y1 - 1 && dest.Is(black)
+	if !source.Is(b.turn) {
+		return false
+	}
+
+	switch source {
+	case PieceWhitePawn, PieceBlackPawn:
+		other_side := 1 - b.turn
+		direction := int(1 - 2 * b.turn)
+		println(direction)
+		baseline := int(1 + b.turn * 5)
+		return m.x2 == m.x1 && m.y2 == m.y1 + direction && dest == PieceNone ||
+			m.y1 == baseline && m.y2 == baseline + 2 * direction && m.x1 == m.x2 && dest == PieceNone && *b.At(m.x2, m.y1 + direction) == PieceNone ||
+			(m.x2 == m.x1 - 1 || m.x2 == m.x1 + 1) && m.y2 == m.y1 + direction && dest.Is(other_side)
 	}
 	return false
 }
