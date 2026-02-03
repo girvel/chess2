@@ -124,6 +124,7 @@ func (b *Board) Move(move Move) {
 }
 
 // TODO split detection & validation
+// NEXT fix castling through check
 func (b *Board) WillBeEnPassant(m Move) bool {
 	source := *b.At(m.X1, m.X2)
 	if source != PieceWhitePawn && source != PieceBlackPawn {
@@ -152,46 +153,36 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 
 func (b *Board) WillBeShortCastle(m Move) bool {
 	// NEXT check attack on passed square
+	var backline int
+	this_side := b.Turn
+	opposite_side := 1 - b.Turn
 	if b.Turn == SideWhite {
-		if (m != NewMove(4, 7, 6, 7) ||
-			*b.At(4, 7) != PieceWhiteKing ||
-			*b.At(5, 7) != PieceNone ||
-			*b.At(6, 7) != PieceNone ||
-			b.H1Moved ||
-			b.E1Moved) {
+		if b.H1Moved || b.E1Moved {
 			return false
 		}
-
-		b.Turn = SideBlack
-		for x := range BoardW {
-			for y := range BoardH {
-				piece := *b.At(x, y)
-				if piece.Is(SideBlack) && b.IsMoveLegal(NewMove(x, y, 5, 7)) {
-					return false
-				}
-			}
-		}
-		b.Turn = SideWhite
+		backline = 7
 	} else {
-		if (m != NewMove(4, 0, 6, 0) ||
-			*b.At(4, 0) != PieceBlackKing ||
-			*b.At(5, 0) != PieceNone ||
-			*b.At(6, 0) != PieceNone ||
-			b.H8Moved ||
-			b.E8Moved) {
+		if b.H8Moved || b.E8Moved {
 			return false
 		}
+		backline = 0
+	}
 
-		b.Turn = SideWhite
-		for x := range BoardW {
-			for y := range BoardH {
-				piece := *b.At(x, y)
-				if piece.Is(SideWhite) && b.IsMoveLegal(NewMove(x, y, 5, 0)) {
-					return false
-				}
+	if (m != NewMove(4, backline, 6, backline) ||
+		*b.At(5, backline) != PieceNone ||
+		*b.At(6, backline) != PieceNone) {
+		return false
+	}
+
+	b.Turn = opposite_side
+	defer func() {b.Turn = this_side}()
+	for x := range BoardW {
+		for y := range BoardH {
+			piece := *b.At(x, y)
+			if piece.Is(opposite_side) && b.IsMoveLegal(NewMove(x, y, 5, backline)) {
+				return false
 			}
 		}
-		b.Turn = SideBlack
 	}
 
 	return true
@@ -261,7 +252,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 		}
 	
 	case PieceWhiteKing, PieceBlackKing:
-		return Abs(ox) == 1 || Abs(oy) == 1
+		return Abs(ox) * Abs(oy) == 1
 	
 	case PieceWhiteQueen, PieceBlackQueen:
 		if Abs(ox) != Abs(oy) && (ox != 0) == (oy != 0) {
