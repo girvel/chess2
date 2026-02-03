@@ -145,4 +145,8 @@ func main() {
 	for _, sprite := range sprites {
 		rl.UnloadTexture(sprite)
 	}
+
+	rl.UnloadTexture(moveSprite)
+	rl.UnloadTexture(winSprite)
+	rl.UnloadTexture(lossSprite)
 }
