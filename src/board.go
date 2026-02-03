@@ -45,11 +45,13 @@ type Board struct {
 	Turn Side
 	LastMove Move
 	A1Moved, A8Moved, E1Moved, E8Moved, H1Moved, H8Moved bool
+	Winner Side
 }
 
 func EmptyBoard() *Board {
 	var result Board
 	result.Turn = SideWhite
+	result.Winner = SideNone
 
 	*result.At(0, 0) = PieceBlackRook
 	*result.At(1, 0) = PieceBlackKnight
@@ -106,11 +108,11 @@ func NewMove(x1, y1, x2, y2 int) Move {
 }
 
 func (b *Board) Move(move Move) {
-	if b.WillBeEnPassant(move) {
+	switch {
+	case b.WillBeEnPassant(move):
 		*b.At(move.X2, move.Y1) = PieceNone;
-	}
 
-	if b.WillBeCastle(move) {
+	case b.WillBeCastle(move):
 		direction := Sign(move.X2 - move.X1)
 		var rookX int
 		if direction < 0 {
@@ -122,8 +124,16 @@ func (b *Board) Move(move Move) {
 		*b.At(rookX, move.Y2) = PieceNone;
 	}
 
-	*b.At(move.X2, move.Y2) = *b.At(move.X1, move.Y1)
-	*b.At(move.X1, move.Y1) = PieceNone
+	source := b.At(move.X1, move.Y1)
+	dest := b.At(move.X2, move.Y2)
+
+	switch *dest {
+	case PieceWhiteKing: b.Winner = SideBlack
+	case PieceBlackKing: b.Winner = SideWhite
+	}
+
+	*dest = *source
+	*source = PieceNone
 	b.Turn = 1 - b.Turn
 	b.LastMove = move
 
@@ -204,6 +214,10 @@ func (b *Board) WillBeCastle(m Move) bool {
 
 // TODO should it check for turn?
 func (b *Board) IsMoveLegal(m Move) bool {
+	if b.Winner != SideNone {
+		return false
+	}
+
 	if (m.X1 < 0 || m.X2 < 0 || m.Y1 < 0 || m.Y2 < 0 ||
 		m.X1 >= BoardSize || m.X2 >= BoardSize || m.Y1 >= BoardSize || m.Y2 >= BoardSize) {
 		return false

@@ -97,6 +97,9 @@ func main() {
 		}
 		rl.EndDrawing()
 
+		if board.Winner != chess2.SideNone {
+			continue
+		}
 		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 			x := int(rl.GetMouseX()) / totalCellSize
 			y := int(rl.GetMouseY()) / totalCellSize
