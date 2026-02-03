@@ -1,6 +1,8 @@
 package main
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import (
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
 
 const scale int = 4
 const cellSize int = 16
@@ -39,8 +41,8 @@ func EmptyBoard() *Board {
 	*result.At(0, 0) = PieceBlackRook
 	*result.At(1, 0) = PieceBlackKnight
 	*result.At(2, 0) = PieceBlackBishop
-	*result.At(3, 0) = PieceBlackKing
-	*result.At(4, 0) = PieceBlackQueen
+	*result.At(3, 0) = PieceBlackQueen
+	*result.At(4, 0) = PieceBlackKing
 	*result.At(5, 0) = PieceBlackBishop
 	*result.At(6, 0) = PieceBlackKnight
 	*result.At(7, 0) = PieceBlackRook
@@ -66,8 +68,8 @@ func EmptyBoard() *Board {
 	*result.At(0, 7) = PieceWhiteRook
 	*result.At(1, 7) = PieceWhiteKnight
 	*result.At(2, 7) = PieceWhiteBishop
-	*result.At(3, 7) = PieceWhiteKing
-	*result.At(4, 7) = PieceWhiteQueen
+	*result.At(3, 7) = PieceWhiteQueen
+	*result.At(4, 7) = PieceWhiteKing
 	*result.At(5, 7) = PieceWhiteBishop
 	*result.At(6, 7) = PieceWhiteKnight
 	*result.At(7, 7) = PieceWhiteRook
@@ -77,6 +79,11 @@ func EmptyBoard() *Board {
 
 func (b *Board) At(x, y int) *Piece {
 	return &b.inner[x + y * w]
+}
+
+func (b *Board) Move(x1, y1, x2, y2 int) {
+	*b.At(x2, y2) = *b.At(x1, y1)
+	*b.At(x1, y1) = PieceNone
 }
 
 func LoadWhitePiece(filepath string) rl.Texture2D {
@@ -101,23 +108,26 @@ func main() {
 
 	board := EmptyBoard()
 
-	for !rl.WindowShouldClose() {
-		sprites := []rl.Texture2D{
-			LoadWhitePiece("sprites/none.png"),
-			LoadWhitePiece("sprites/pawn.png"),
-			LoadBlackPiece("sprites/pawn.png"),
-			LoadWhitePiece("sprites/knight.png"),
-			LoadBlackPiece("sprites/knight.png"),
-			LoadWhitePiece("sprites/bishop.png"),
-			LoadBlackPiece("sprites/bishop.png"),
-			LoadWhitePiece("sprites/rook.png"),
-			LoadBlackPiece("sprites/rook.png"),
-			LoadWhitePiece("sprites/queen.png"),
-			LoadBlackPiece("sprites/queen.png"),
-			LoadWhitePiece("sprites/king.png"),
-			LoadBlackPiece("sprites/king.png"),
-		}
+	sprites := []rl.Texture2D{
+		LoadWhitePiece("sprites/none.png"),
+		LoadWhitePiece("sprites/pawn.png"),
+		LoadBlackPiece("sprites/pawn.png"),
+		LoadWhitePiece("sprites/knight.png"),
+		LoadBlackPiece("sprites/knight.png"),
+		LoadWhitePiece("sprites/bishop.png"),
+		LoadBlackPiece("sprites/bishop.png"),
+		LoadWhitePiece("sprites/rook.png"),
+		LoadBlackPiece("sprites/rook.png"),
+		LoadWhitePiece("sprites/queen.png"),
+		LoadBlackPiece("sprites/queen.png"),
+		LoadWhitePiece("sprites/king.png"),
+		LoadBlackPiece("sprites/king.png"),
+	}
 
+	var selectedX, selectedY int
+	isSelected := false
+
+	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		for x := range w {
 			for y := range h {
@@ -143,8 +153,24 @@ func main() {
 		}
 		rl.EndDrawing()
 
-		for _, sprite := range sprites {
-			rl.UnloadTexture(sprite)
+		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+			x := int(rl.GetMouseX()) / totalCellSize
+			y := int(rl.GetMouseY()) / totalCellSize
+
+			if isSelected {
+				board.Move(selectedX, selectedY, x, y)
+				isSelected = false
+			} else {
+				if *board.At(x, y) != PieceNone {
+					selectedX = x
+					selectedY = y
+					isSelected = true
+				}
+			}
 		}
+	}
+
+	for _, sprite := range sprites {
+		rl.UnloadTexture(sprite)
 	}
 }
