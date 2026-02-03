@@ -12,11 +12,35 @@ const h int = 8
 type Piece int
 const (
 	PieceNone Piece = iota
-	PiecePawn
+	PieceWhitePawn
+	PieceBlackPawn
 )
 
 type Board struct {
 	inner [w * h]Piece
+}
+
+func EmptyBoard() *Board {
+	var result Board
+	*result.At(0, 1) = PieceBlackPawn
+	*result.At(1, 1) = PieceBlackPawn
+	*result.At(2, 1) = PieceBlackPawn
+	*result.At(3, 1) = PieceBlackPawn
+	*result.At(4, 1) = PieceBlackPawn
+	*result.At(5, 1) = PieceBlackPawn
+	*result.At(6, 1) = PieceBlackPawn
+	*result.At(7, 1) = PieceBlackPawn
+
+	*result.At(0, 6) = PieceWhitePawn
+	*result.At(1, 6) = PieceWhitePawn
+	*result.At(2, 6) = PieceWhitePawn
+	*result.At(3, 6) = PieceWhitePawn
+	*result.At(4, 6) = PieceWhitePawn
+	*result.At(5, 6) = PieceWhitePawn
+	*result.At(6, 6) = PieceWhitePawn
+	*result.At(7, 6) = PieceWhitePawn
+
+	return &result
 }
 
 func (b *Board) At(x, y int) *Piece {
@@ -37,13 +61,13 @@ func main() {
 
 	sprites := []rl.Texture2D{
 		LoadSprite("sprites/none.png"),
-		LoadSprite("sprites/pawn.png"),
+		LoadSprite("sprites/white_pawn.png"),
+		LoadSprite("sprites/black_pawn.png"),
 	}
 
-	var board Board
-	*board.At(0, 6) = PiecePawn
+	board := EmptyBoard()
 
-	white := rl.GetColor(0xb5bdbaff)
+	white := rl.GetColor(0xedededff)
 	black := rl.GetColor(0x3a373dff)
 
 	for !rl.WindowShouldClose() {
@@ -63,7 +87,11 @@ func main() {
 					int32(totalCellSize), int32(totalCellSize),
 					squareColor,
 				)
-				rl.DrawTexture(sprites[*board.At(x, y)], render_x, render_y, rl.White)
+				
+				piece := *board.At(x, y)
+				if piece != PieceNone {
+					rl.DrawTexture(sprites[piece], render_x, render_y, rl.White)
+				}
 			}
 		}
 		rl.EndDrawing()
