@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	chess2 "github.com/girvel/chess2/src"
@@ -126,6 +127,13 @@ func main() {
 		}
 
 		if board.Turn == chess2.SideBlack {
+			select {
+			case responses := <-responseChannel:
+				board.Move(responses[board.LastMove])
+				responseCtx, responseCancel = context.WithCancel(context.Background())
+				go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
+			default:
+			}
 			continue
 		}
 
@@ -137,11 +145,9 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
-					responseCancel()
-					responses := <-responseChannel
-					board.Move(responses[move])
-					responseCtx, responseCancel = context.WithCancel(context.Background())
-					go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
+					time.AfterFunc(1000 * time.Millisecond, func() {
+						responseCancel()
+					})
 				}
 				isSelected = false
 			} else {
