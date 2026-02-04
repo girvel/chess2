@@ -13,9 +13,9 @@ func main() {
 	ai := chess2.CreateAi(*board)
 
 	for {
-		iosystem.Draw(*board)
+		iosystem.Draw(board)
 
-		playerMove, shouldClose := iosystem.ReadInput(*board)
+		playerMove, shouldClose := iosystem.ReadInput(board)
 		if playerMove != nil {
 			board.Move(*playerMove)
 			ai.PushMove(*playerMove)

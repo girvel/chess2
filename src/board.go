@@ -157,8 +157,8 @@ func (b *Board) Move(move Move) {
 	}
 }
 
-func (b Board) Apply(move Move) *Board {
-	result := b
+func (b *Board) Apply(move Move) *Board {
+	result := *b
 	result.Move(move)
 	return &result
 }
@@ -324,7 +324,7 @@ func (b *Board) IsMoveLegal(m Move) bool {
 	}
 }
 
-func (b Board) GetMoves(x, y int) []Move {
+func (b *Board) GetMoves(x, y int) []Move {
 	var potential []Move
 	source := *b.At(x, y)
 	switch source {

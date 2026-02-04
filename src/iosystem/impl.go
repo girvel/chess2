@@ -48,7 +48,7 @@ func Init() {
 	lossSprite = loadSprite("sprites/loss.png")
 }
 
-func Draw(board chess2.Board) {
+func Draw(board *chess2.Board) {
 	rl.BeginDrawing()
 	for x := range chess2.BoardSize {
 		for y := range chess2.BoardSize {
@@ -103,7 +103,7 @@ func Draw(board chess2.Board) {
 	rl.EndDrawing()
 }
 
-func ReadInput(board chess2.Board) (*chess2.Move, bool) {
+func ReadInput(board *chess2.Board) (*chess2.Move, bool) {
 	shouldClose := rl.WindowShouldClose()
 	if board.Winner != chess2.SideNone || board.Turn == chess2.SideBlack {
 		return nil, shouldClose

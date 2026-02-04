@@ -57,7 +57,7 @@ var cost = []float64{
 	1000, -1000,
 }
 
-func evaluate(b Board) float64 {
+func evaluate(b *Board) float64 {
 	switch b.Winner {
 	case SideWhite: return 1000
 	case SideBlack: return -1000
@@ -71,7 +71,7 @@ func evaluate(b Board) float64 {
 	return result
 }
 
-func getAllMoves(b Board) iter.Seq[Move] {
+func getAllMoves(b *Board) iter.Seq[Move] {
 	return func(yield func(Move) bool) {
 		for x := range BoardSize {
 			for y := range BoardSize {
@@ -90,7 +90,7 @@ func getAllMoves(b Board) iter.Seq[Move] {
 	}
 }
 
-func bestMove(b Board, depth int) Move {
+func bestMove(b *Board, depth int) Move {
 	var result Move
 	var bestScore float64
 	isMaximizing := b.Turn == SideWhite
@@ -101,9 +101,9 @@ func bestMove(b Board, depth int) Move {
 	}
 
 	for m := range getAllMoves(b) {
-		nextBoard := *b.Apply(m)
+		nextBoard := b.Apply(m)
 		if depth > 0 {
-			nextBoard = *nextBoard.Apply(bestMove(nextBoard, depth - 1))
+			nextBoard = nextBoard.Apply(bestMove(nextBoard, depth - 1))
 		}
 		score := evaluate(nextBoard)
 
@@ -123,7 +123,7 @@ func bestMove(b Board, depth int) Move {
 	return result
 }
 
-func searchBestResponse(b Board, out chan map[Move]Move, ctx context.Context) {
+func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 	var currentResult, lastResult map[Move]Move
 	depth := 0
 	search: for {
@@ -139,7 +139,7 @@ func searchBestResponse(b Board, out chan map[Move]Move, ctx context.Context) {
 			wg.Go(func() {
 				results <- movePair{
 					move: m,
-					response: bestMove(*b.Apply(m), depth),
+					response: bestMove(b.Apply(m), depth),
 				}
 			})
 		}
@@ -171,5 +171,5 @@ func searchBestResponse(b Board, out chan map[Move]Move, ctx context.Context) {
 
 func (ai *Ai) launchSearch() {
 	ai.responseCtx, ai.responseCancel = context.WithCancel(context.Background())
-	go searchBestResponse(*ai.board, ai.responseChannel, ai.responseCtx)
+	go searchBestResponse(ai.board, ai.responseChannel, ai.responseCtx)
 }
