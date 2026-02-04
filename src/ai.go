@@ -2,6 +2,7 @@ package chess2
 
 import (
 	"context"
+	"iter"
 	"time"
 )
 
@@ -29,6 +30,25 @@ func Evaluate(b Board) float64 {
 	return result
 }
 
+func GetAllMoves(b Board) iter.Seq[Move] {
+	return func(yield func(Move) bool) {
+		for x := range BoardSize {
+			for y := range BoardSize {
+				piece := *b.At(x, y)
+				if piece.Side() != b.Turn {
+					continue
+				}
+
+				for _, m := range b.GetMoves(x, y) {
+					if !yield(m) {
+						return
+					}
+				}
+			}
+		}
+	}
+}
+
 func BestMove(b Board, depth int) Move {
 	var result Move
 	var bestScore float64
@@ -39,32 +59,23 @@ func BestMove(b Board, depth int) Move {
 		bestScore = 1000000
 	}
 
-	for x := range BoardSize {
-		for y := range BoardSize {
-			piece := *b.At(x, y)
-			if piece.Side() != b.Turn {
-				continue
-			}
+	for m := range GetAllMoves(b) {
+		nextBoard := *b.Apply(m)
+		if depth > 0 {
+			nextBoard = *nextBoard.Apply(BestMove(nextBoard, depth - 1))
+		}
+		score := Evaluate(nextBoard)
 
-			for _, m := range b.GetMoves(x, y) {
-				nextBoard := *b.Apply(m)
-				if depth > 0 {
-					nextBoard = *nextBoard.Apply(BestMove(nextBoard, depth - 1))
-				}
-				score := Evaluate(nextBoard)
+		var condition bool
+		if isMaximizing {
+			condition = score > bestScore
+		} else {
+			condition = score < bestScore
+		}
 
-				var condition bool
-				if isMaximizing {
-					condition = score > bestScore
-				} else {
-					condition = score < bestScore
-				}
-
-				if condition {
-					bestScore = score
-					result = m
-				}
-			}
+		if condition {
+			bestScore = score
+			result = m
 		}
 	}
 
