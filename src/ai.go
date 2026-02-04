@@ -29,46 +29,7 @@ func Evaluate(b Board) float64 {
 	return result
 }
 
-type ratedMove struct {
-	move Move
-	score float64
-}
-
-func BestMove(b Board, depth int, async bool) Move {
-	var moves []Move
-	for x := range BoardSize {
-		for y := range BoardSize {
-			piece := *b.At(x, y)
-			if piece.Side() != b.Turn {
-				continue
-			}
-
-			for _, m := range b.GetMoves(x, y) {
-				moves = append(moves, m)
-			}
-		}
-	}
-
-	scoreChannel := make(chan ratedMove, len(moves))
-	for _, m := range moves {
-		goOver := func() {
-			nextBoard := *b.Apply(m)
-			if depth > 0 {
-				nextBoard = *nextBoard.Apply(BestMove(nextBoard, depth - 1, false))
-			}
-			scoreChannel <- ratedMove{
-				move: m,
-				score: Evaluate(nextBoard),
-			}
-		}
-
-		if async {
-			go goOver()
-		} else {
-			goOver()
-		}
-	}
-
+func BestMove(b Board, depth int) Move {
 	var result Move
 	var bestScore float64
 	isMaximizing := b.Turn == SideWhite
@@ -78,19 +39,32 @@ func BestMove(b Board, depth int, async bool) Move {
 		bestScore = 1000000
 	}
 
-	for range len(moves) {
-		rm := <-scoreChannel
+	for x := range BoardSize {
+		for y := range BoardSize {
+			piece := *b.At(x, y)
+			if piece.Side() != b.Turn {
+				continue
+			}
 
-		var condition bool
-		if isMaximizing {
-			condition = rm.score > bestScore
-		} else {
-			condition = rm.score < bestScore
-		}
+			for _, m := range b.GetMoves(x, y) {
+				nextBoard := *b.Apply(m)
+				if depth > 0 {
+					nextBoard = *nextBoard.Apply(BestMove(nextBoard, depth - 1))
+				}
+				score := Evaluate(nextBoard)
 
-		if condition {
-			bestScore = rm.score
-			result = rm.move
+				var condition bool
+				if isMaximizing {
+					condition = score > bestScore
+				} else {
+					condition = score < bestScore
+				}
+
+				if condition {
+					bestScore = score
+					result = m
+				}
+			}
 		}
 	}
 
@@ -107,7 +81,7 @@ func SearchBestMove(b Board, out chan Move) {
 		depth += 1
 		resultChannel := make(chan Move)
 		go func() {
-			resultChannel <- BestMove(b, depth, true)
+			resultChannel <- BestMove(b, depth)
 		}()
 
 		select {
