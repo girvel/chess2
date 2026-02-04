@@ -3,7 +3,7 @@ package chess2
 import (
 	"context"
 	"iter"
-	"time"
+	"sync"
 )
 
 var cost = []float64{
@@ -82,27 +82,48 @@ func BestMove(b Board, depth int) Move {
 	return result
 }
 
-func SearchBestMove(b Board, out chan Move) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 2)
-	defer cancel()
-
-	var result Move
+func SearchBestResponse(b Board, out chan map[Move]Move, ctx context.Context) {
+	var currentResult, lastResult map[Move]Move
 	depth := 0
-	loop: for {
+	search: for {
 		depth += 1
-		resultChannel := make(chan Move)
+
+		type movePair struct {
+			move, response Move
+		}
+
+		results := make(chan movePair, 10)
+		var wg sync.WaitGroup
+		for m := range GetAllMoves(b) {
+			wg.Go(func() {
+				results <- movePair{
+					move: m,
+					response: BestMove(*b.Apply(m), depth),
+				}
+			})
+		}
+
 		go func() {
-			resultChannel <- BestMove(b, depth)
+			wg.Wait()
+			close(results)
 		}()
 
-		select {
-		case <-ctx.Done():
-			depth--
-			break loop
-		case m := <-resultChannel:
-			result = m
+		currentResult = make(map[Move]Move)
+		build: for {
+			select {
+			case <-ctx.Done():
+				depth--
+				break search
+
+			case pair, ok := <-results:
+				if !ok {
+					break build
+				}
+				currentResult[pair.move] = pair.response
+			}
 		}
+		lastResult = currentResult
 	}
-	out <- result
+	out <- lastResult
 	println("Depth", depth)
 }

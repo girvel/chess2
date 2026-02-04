@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 	chess2 "github.com/girvel/chess2/src"
 )
@@ -59,7 +61,9 @@ func main() {
 	var selectedX, selectedY int
 	var potentialMoves []chess2.Move
 	isSelected := false
-	moveChannel := make(chan chess2.Move)
+	responseChannel := make(chan map[chess2.Move]chess2.Move)
+	responseCtx, responseCancel := context.WithCancel(context.Background())
+	go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -120,12 +124,6 @@ func main() {
 		}
 
 		if board.Turn == chess2.SideBlack {
-			select {
-			case bestResponse := <-moveChannel:
-				println(bestResponse.String())
-				board.Move(bestResponse)
-			default:
-			}
 			continue
 		}
 
@@ -137,7 +135,11 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
-					go chess2.SearchBestMove(*board, moveChannel)
+					responseCancel()
+					responses := <-responseChannel
+					board.Move(responses[move])
+					responseCtx, responseCancel = context.WithCancel(context.Background())
+					go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
 				}
 				isSelected = false
 			} else {
