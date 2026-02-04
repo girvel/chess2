@@ -190,6 +190,20 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 	}
 }
 
+func (b *Board) CanBeAttacked(x, y int) bool {
+	oppositeSide := 1 - b.Turn
+	for ix := range BoardSize {
+		for iy := range BoardSize {
+			piece := *b.At(ix, iy)
+			if piece.Is(oppositeSide) && b.IsMoveLegal(NewMove(ix, iy, x, y)) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (b *Board) WillBeCastle(m Move) bool {
 	// NEXT check attack on passed square
 	var backline int
@@ -216,16 +230,7 @@ func (b *Board) WillBeCastle(m Move) bool {
 
 	b.Turn = oppositeSide
 	defer func() {b.Turn = thisSide}()
-	for x := range BoardSize {
-		for y := range BoardSize {
-			piece := *b.At(x, y)
-			if piece.Is(oppositeSide) && b.IsMoveLegal(NewMove(x, y, 4 + direction, backline)) {
-				return false
-			}
-		}
-	}
-
-	return true
+	return !b.CanBeAttacked(4, backline) && !b.CanBeAttacked(4 + direction, backline)
 }
 
 // TODO should it check for turn?
