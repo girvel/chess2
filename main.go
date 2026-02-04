@@ -67,6 +67,7 @@ func main() {
 	responseChannel := make(chan map[chess2.Move]chess2.Move)
 	responseCtx, responseCancel := context.WithCancel(context.Background())
 	go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
+	lastMoveTime := time.Now()
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -132,6 +133,7 @@ func main() {
 				board.Move(responses[board.LastMove])
 				responseCtx, responseCancel = context.WithCancel(context.Background())
 				go chess2.SearchBestResponse(*board, responseChannel, responseCtx)
+				lastMoveTime = time.Now()
 			default:
 			}
 			continue
@@ -145,7 +147,7 @@ func main() {
 				move := chess2.NewMove(selectedX, selectedY, x, y)
 				if board.IsMoveLegal(move) {
 					board.Move(move)
-					time.AfterFunc(1000 * time.Millisecond, func() {
+					time.AfterFunc(min(time.Since(lastMoveTime), time.Second * 10), func() {
 						responseCancel()
 					})
 				}
