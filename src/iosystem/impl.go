@@ -15,6 +15,8 @@ var colorBlackSquare rl.Color = rl.GetColor(0x3a373dff)
 var colorWhitePiece rl.Color = rl.GetColor(0xedededff)
 var colorBlackPiece rl.Color = rl.GetColor(0x544747ff)
 var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
+var colorLastMoveDark rl.Color = rl.GetColor(0x5d863fff)
+var colorLastMoveLight rl.Color = rl.GetColor(0x869d42ff)
 
 var pieceSprites []rl.Texture2D
 var moveSprite, winSprite, lossSprite rl.Texture2D
@@ -57,9 +59,21 @@ func Draw(board *chess2.Board) {
 			case isSelected && x == selectedX && y == selectedY:
 				squareColor = colorSelected
 			case (x + y) % 2 == 0:
-				squareColor = colorWhiteSquare
+				if board.LastMove != nil && (
+					x == board.LastMove.X1 && y == board.LastMove.Y1 ||
+					x == board.LastMove.X2 && y == board.LastMove.Y2) {
+					squareColor = colorLastMoveLight
+				} else {
+					squareColor = colorWhiteSquare
+				}
 			default:
-				squareColor = colorBlackSquare
+				if board.LastMove != nil && (
+					x == board.LastMove.X1 && y == board.LastMove.Y1 ||
+					x == board.LastMove.X2 && y == board.LastMove.Y2) {
+					squareColor = colorLastMoveDark
+				} else {
+					squareColor = colorBlackSquare
+				}
 			}
 
 			renderX := int32(x * totalCellSize)

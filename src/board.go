@@ -43,7 +43,7 @@ func (p Piece) Side() Side {
 type Board struct {
 	inner [BoardSize * BoardSize]Piece
 	Turn Side
-	LastMove Move
+	LastMove *Move
 	A1Moved, A8Moved, E1Moved, E8Moved, H1Moved, H8Moved bool
 	Winner Side
 }
@@ -145,7 +145,7 @@ func (b *Board) Move(move Move) {
 	}
 	*source = PieceNone
 	b.Turn = 1 - b.Turn
-	b.LastMove = move
+	b.LastMove = &move
 
 	switch {
 	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true;
