@@ -137,9 +137,10 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 		var wg sync.WaitGroup
 		for m := range getAllMoves(b) {
 			wg.Go(func() {
-				results <- movePair{
-					move: m,
-					response: bestMove(b.Apply(m), depth),
+				select {
+				case <-ctx.Done():
+					return
+				case results <- movePair{ move: m, response: bestMove(b.Apply(m), depth) }:
 				}
 			})
 		}
