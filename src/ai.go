@@ -90,37 +90,37 @@ func getAllMoves(b *Board) iter.Seq[Move] {
 	}
 }
 
-func bestMove(b *Board, depth int) Move {
-	var result Move
-	var bestScore float64
+func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
+	if depth == 0 || b.Winner != SideNone {
+		return evaluate(b)
+	}
+
 	isMaximizing := b.Turn == SideWhite
 	if isMaximizing {
-		bestScore = -1000000
+		maxEval := -1000000.
+		for m := range getAllMoves(b) {
+			nextBoard := b.Apply(m)
+			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
+			maxEval = max(maxEval, eval)
+			alpha = max(alpha, eval)
+			if beta <= alpha {
+				break
+			}
+		}
+		return maxEval
 	} else {
-		bestScore = 1000000
+		minEval := 1000000.
+		for m := range getAllMoves(b) {
+			nextBoard := b.Apply(m)
+			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
+			minEval = min(minEval, eval)
+			beta = min(beta, eval)
+			if beta <= alpha {
+				break
+			}
+		}
+		return minEval
 	}
-
-	for m := range getAllMoves(b) {
-		nextBoard := b.Apply(m)
-		if depth > 0 {
-			nextBoard = nextBoard.Apply(bestMove(nextBoard, depth - 1))
-		}
-		score := evaluate(nextBoard)
-
-		var condition bool
-		if isMaximizing {
-			condition = score > bestScore
-		} else {
-			condition = score < bestScore
-		}
-
-		if condition {
-			bestScore = score
-			result = m
-		}
-	}
-
-	return result
 }
 
 func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
@@ -137,10 +137,20 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 		var wg sync.WaitGroup
 		for m := range getAllMoves(b) {
 			wg.Go(func() {
+				nextBoard := b.Apply(m)
+				bestScore := 1000000.
+				var bestResponse Move
+				for response := range getAllMoves(nextBoard) {
+					score := alphaBeta(nextBoard.Apply(response), depth, -1000000., 1000000)
+					if score < bestScore {
+						bestResponse = response
+						bestScore = score
+					}
+				}
 				select {
 				case <-ctx.Done():
 					return
-				case results <- movePair{ move: m, response: bestMove(b.Apply(m), depth) }:
+				case results <- movePair{ move: m, response: bestResponse }:
 				}
 			})
 		}
