@@ -3,19 +3,19 @@ package main
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	chess2 "github.com/girvel/chess2/src"
-	"github.com/girvel/chess2/src/io_system"
+	"github.com/girvel/chess2/src/iosystem"
 )
 
 func main() {
-	io_system.Init()
-	defer io_system.Deinit()
+	iosystem.Init()
+	defer iosystem.Deinit()
 	board := chess2.EmptyBoard()
 	ai := chess2.CreateAi(*board)
 
 	for {
-		io_system.Draw(*board)
+		iosystem.Draw(*board)
 
-		playerMove, shouldClose := io_system.ReadInput(*board)
+		playerMove, shouldClose := iosystem.ReadInput(*board)
 		if playerMove != nil {
 			board.Move(*playerMove)
 			ai.PushMove(*playerMove)

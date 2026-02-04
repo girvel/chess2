@@ -1,4 +1,4 @@
-package io_system
+package iosystem
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -62,17 +62,17 @@ func Draw(board chess2.Board) {
 				squareColor = colorBlackSquare
 			}
 
-			render_x := int32(x * totalCellSize)
-			render_y := int32(y * totalCellSize)
+			renderX := int32(x * totalCellSize)
+			renderY := int32(y * totalCellSize)
 			rl.DrawRectangle(
-				render_x, render_y,
+				renderX, renderY,
 				int32(totalCellSize), int32(totalCellSize),
 				squareColor,
 			)
 			
 			piece := *board.At(x, y)
 			if piece != chess2.PieceNone {
-				rl.DrawTexture(pieceSprites[piece], render_x, render_y, rl.White)
+				rl.DrawTexture(pieceSprites[piece], renderX, renderY, rl.White)
 			}
 		}
 	}

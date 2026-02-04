@@ -193,8 +193,8 @@ func (b *Board) WillBeEnPassant(m Move) bool {
 func (b *Board) WillBeCastle(m Move) bool {
 	// NEXT check attack on passed square
 	var backline int
-	this_side := b.Turn
-	opposite_side := 1 - b.Turn
+	thisSide := b.Turn
+	oppositeSide := 1 - b.Turn
 	direction := Sign(m.X2 - m.X1)
 	if b.Turn == SideWhite {
 		if b.H1Moved || b.E1Moved {
@@ -214,12 +214,12 @@ func (b *Board) WillBeCastle(m Move) bool {
 		return false
 	}
 
-	b.Turn = opposite_side
-	defer func() {b.Turn = this_side}()
+	b.Turn = oppositeSide
+	defer func() {b.Turn = thisSide}()
 	for x := range BoardSize {
 		for y := range BoardSize {
 			piece := *b.At(x, y)
-			if piece.Is(opposite_side) && b.IsMoveLegal(NewMove(x, y, 4 + direction, backline)) {
+			if piece.Is(oppositeSide) && b.IsMoveLegal(NewMove(x, y, 4 + direction, backline)) {
 				return false
 			}
 		}
