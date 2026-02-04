@@ -234,8 +234,7 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 					}
 				}
 				select {
-				case <-ctx.Done():
-					return
+				case <-ctx.Done(): if depth > 1 { return }
 				case results <- movePair{ move: m, response: bestResponse }:
 				}
 			})
