@@ -7,7 +7,7 @@ import (
 	chess2 "github.com/girvel/chess2/src"
 )
 
-const scale int = 4
+const scale int = 6
 const cellSize int = 16
 const totalCellSize int = scale * cellSize
 const windowSize = chess2.BoardSize * totalCellSize
