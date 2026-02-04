@@ -130,8 +130,8 @@ func Draw(board *chess2.Board) {
 	if board.Winner != chess2.SideNone {
 		var texture rl.Texture2D
 		switch board.Winner {
-		case chess2.SideWhite: texture = winSprite;
-		case chess2.SideBlack: texture = lossSprite;
+		case chess2.SideWhite: texture = winSprite
+		case chess2.SideBlack: texture = lossSprite
 		}
 
 		rl.DrawTexture(

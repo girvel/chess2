@@ -98,7 +98,7 @@ var rawCost = [][BoardSize * BoardSize]float64{
 	 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 
 	 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 
 	 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 
-	 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0,},
+	 4.8, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 4.8,},
 
 	{9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 
 	 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 
@@ -159,13 +159,13 @@ func getAllMoves(b *Board) []Move {
 		return 1000000 + 100 * Abs(cost[capture][m.X2 + BoardSize * m.Y2]) - Abs(cost[attacker][m.X1 + BoardSize * m.Y1])
 	}
 
-	slices.SortFunc(result, func(a, b Move) int { return Sign(score(b) - score(a)); })
+	slices.SortFunc(result, func(a, b Move) int { return Sign(score(b) - score(a)) })
 
 	return result
 }
 
-func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
-	if depth == 0 || b.Winner != SideNone {
+func alphaBeta(b *Board, depth int, alpha, beta float64, onlyCaptures bool) float64 {
+	if depth <= 0 || b.Winner != SideNone {
 		return evaluate(b)
 	}
 
@@ -173,8 +173,14 @@ func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
 	if isMaximizing {
 		maxEval := -1000000.
 		for _, m := range getAllMoves(b) {
+			if onlyCaptures && !m.IsCapture(b) { continue }
 			nextBoard := b.Apply(m)
-			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
+			var eval float64
+			if depth == 1 && m.IsCapture(b) {
+				eval = alphaBeta(nextBoard, 1, alpha, beta, true)
+			} else {
+				eval = alphaBeta(nextBoard, depth - 1, alpha, beta, onlyCaptures)
+			}
 			maxEval = max(maxEval, eval)
 			alpha = max(alpha, eval)
 			if beta <= alpha {
@@ -185,8 +191,14 @@ func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
 	} else {
 		minEval := 1000000.
 		for _, m := range getAllMoves(b) {
+			if onlyCaptures && !m.IsCapture(b) { continue }
 			nextBoard := b.Apply(m)
-			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
+			var eval float64
+			if depth == 1 && m.IsCapture(b) {
+				eval = alphaBeta(nextBoard, 1, alpha, beta, true)
+			} else {
+				eval = alphaBeta(nextBoard, depth - 1, alpha, beta, onlyCaptures)
+			}
 			minEval = min(minEval, eval)
 			beta = min(beta, eval)
 			if beta <= alpha {
@@ -215,7 +227,7 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 				bestScore := 1000000.
 				var bestResponse Move
 				for _, response := range getAllMoves(nextBoard) {
-					score := alphaBeta(nextBoard.Apply(response), depth, -1000000., 1000000)
+					score := alphaBeta(nextBoard.Apply(response), depth, -1000000., 1000000, false)
 					if score < bestScore {
 						bestResponse = response
 						bestScore = score
@@ -238,8 +250,10 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 		build: for {
 			select {
 			case <-ctx.Done():
-				depth--
-				break search
+				if depth > 1 {
+					depth--
+					break search
+				}
 
 			case pair, ok := <-results:
 				if !ok {

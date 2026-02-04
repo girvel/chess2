@@ -111,10 +111,14 @@ func (m Move) String() string {
 	return fmt.Sprintf("%c%d-%c%d", 'a' + m.X1, 8 - m.Y1, 'a' + m.X2, 8 - m.Y2)
 }
 
+func (m Move) IsCapture(board *Board) bool {
+	return *board.At(m.X2, m.Y2) != PieceNone
+}
+
 func (b *Board) Move(move Move) {
 	switch {
 	case b.WillBeEnPassant(move):
-		*b.At(move.X2, move.Y1) = PieceNone;
+		*b.At(move.X2, move.Y1) = PieceNone
 
 	case b.WillBeCastle(move):
 		direction := Sign(move.X2 - move.X1)
@@ -124,8 +128,8 @@ func (b *Board) Move(move Move) {
 		} else {
 			rookX = 7
 		}
-		*b.At(move.X2 - direction, move.Y2) = *b.At(rookX, move.Y2);
-		*b.At(rookX, move.Y2) = PieceNone;
+		*b.At(move.X2 - direction, move.Y2) = *b.At(rookX, move.Y2)
+		*b.At(rookX, move.Y2) = PieceNone
 	}
 
 	source := b.At(move.X1, move.Y1)
@@ -148,12 +152,12 @@ func (b *Board) Move(move Move) {
 	b.LastMove = &move
 
 	switch {
-	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true;
-	case move.X1 == 4 && move.Y1 == 0: b.E8Moved = true;
-	case move.X1 == 7 && move.Y1 == 0: b.H8Moved = true;
-	case move.X1 == 0 && move.Y1 == 7: b.A1Moved = true;
-	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true;
-	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true;
+	case move.X1 == 0 && move.Y1 == 0: b.A8Moved = true
+	case move.X1 == 4 && move.Y1 == 0: b.E8Moved = true
+	case move.X1 == 7 && move.Y1 == 0: b.H8Moved = true
+	case move.X1 == 0 && move.Y1 == 7: b.A1Moved = true
+	case move.X1 == 4 && move.Y1 == 7: b.E1Moved = true
+	case move.X1 == 7 && move.Y1 == 7: b.H1Moved = true
 	}
 }
 
