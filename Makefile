@@ -22,7 +22,7 @@ pack:
 	cp -r sprites $(DIST_DIR)/
 	
 	@echo "Zipping..."
-	cd $(DIST_DIR) && zip -r ../$(APP_NAME).zip .
+	cd $(DIST_DIR) && zip -r ../$(APP_NAME)_win64.zip .
 
 release: clean build-win pack
-	@echo "Done! Created $(APP_NAME).zip"
+	@echo "Done! Created $(APP_NAME)_win64.zip"
