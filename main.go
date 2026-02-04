@@ -12,8 +12,10 @@ const cellSize int = 16
 const totalCellSize int = scale * cellSize
 const windowSize = chess2.BoardSize * totalCellSize
 
-var colorWhite rl.Color = rl.GetColor(0xedededff)
-var colorBlack rl.Color = rl.GetColor(0x3a373dff)
+var colorWhiteSquare rl.Color = rl.GetColor(0xedededff)
+var colorBlackSquare rl.Color = rl.GetColor(0x3a373dff)
+var colorWhitePiece rl.Color = rl.GetColor(0xedededff)
+var colorBlackPiece rl.Color = rl.GetColor(0x544747ff)
 var colorSelected rl.Color = rl.GetColor(0xcfa867ff)
 
 func LoadSprite(filepath string) rl.Texture2D {
@@ -26,7 +28,7 @@ func LoadSprite(filepath string) rl.Texture2D {
 func LoadSpriteColored(filepath string) rl.Texture2D {
 	image := rl.LoadImage(filepath)
 	defer rl.UnloadImage(image)
-	rl.ImageColorReplace(image, colorWhite, colorBlack)
+	rl.ImageColorReplace(image, colorWhitePiece, colorBlackPiece)
 	rl.ImageResizeNN(image, image.Width * int32(scale), image.Height * int32(scale))
 	return rl.LoadTextureFromImage(image)
 }
@@ -74,9 +76,9 @@ func main() {
 				case isSelected && x == selectedX && y == selectedY:
 					squareColor = colorSelected
 				case (x + y) % 2 == 0:
-					squareColor = colorWhite
+					squareColor = colorWhiteSquare
 				default:
-					squareColor = colorBlack
+					squareColor = colorBlackSquare
 				}
 
 				render_x := int32(x * totalCellSize)
