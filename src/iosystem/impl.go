@@ -19,11 +19,18 @@ var colorLastMoveDark rl.Color = rl.GetColor(0x5d863fff)
 var colorLastMoveLight rl.Color = rl.GetColor(0x869d42ff)
 
 var pieceSprites []rl.Texture2D
-var moveSprite, winSprite, lossSprite rl.Texture2D
+var moveSprite, moveSuggestedSprite, winSprite, lossSprite rl.Texture2D
+
+type selectionMode int
+const (
+	selectionModeNone selectionMode = iota
+	selectionModeDrag
+	selectionModeSelect
+)
 
 var selectedX, selectedY int
 var potentialMoves []chess2.Move
-var isSelected = false
+var mode = selectionModeNone
 
 func Init() {
 	rl.InitWindow(int32(windowSize), int32(windowSize), "girvel's chess app")
@@ -46,17 +53,19 @@ func Init() {
 	}
 
 	moveSprite = loadSprite("sprites/move.png")
+	moveSuggestedSprite = loadSprite("sprites/move_suggested.png")
 	winSprite = loadSprite("sprites/win.png")
 	lossSprite = loadSprite("sprites/loss.png")
 }
 
 func Draw(board *chess2.Board) {
 	rl.BeginDrawing()
+
 	for x := range chess2.BoardSize {
 		for y := range chess2.BoardSize {
 			var squareColor rl.Color
 			switch {
-			case isSelected && x == selectedX && y == selectedY:
+			case mode != selectionModeNone && x == selectedX && y == selectedY:
 				squareColor = colorSelected
 			case (x + y) % 2 == 0:
 				if board.LastMove != nil && (
@@ -85,20 +94,37 @@ func Draw(board *chess2.Board) {
 			)
 			
 			piece := *board.At(x, y)
-			if piece != chess2.PieceNone {
+			if piece != chess2.PieceNone &&
+				(mode != selectionModeDrag || x != selectedX || y != selectedY) {
 				rl.DrawTexture(pieceSprites[piece], renderX, renderY, rl.White)
 			}
 		}
 	}
 
-	if isSelected {
+	hoverX := int(rl.GetMouseX()) / totalCellSize
+	hoverY := int(rl.GetMouseY()) / totalCellSize
+
+	if mode != selectionModeNone {
 		for _, m := range potentialMoves {
+			texture := moveSprite
+			if hoverX == m.X2 && hoverY == m.Y2 {
+				texture = moveSuggestedSprite
+			}
+
 			rl.DrawTexture(
-				moveSprite,
+				texture,
 				int32(m.X2 * totalCellSize), int32(m.Y2 * totalCellSize),
 				rl.White,
 			)
 		}
+	}
+
+	if mode == selectionModeDrag {
+		rl.DrawTexture(
+			pieceSprites[*board.At(selectedX, selectedY)],
+			rl.GetMouseX() - int32(totalCellSize) / 2, rl.GetMouseY() - int32(totalCellSize) / 2,
+			rl.White,
+		)
 	}
 
 	if board.Winner != chess2.SideNone {
@@ -123,27 +149,48 @@ func ReadInput(board *chess2.Board) (*chess2.Move, bool) {
 		return nil, shouldClose
 	}
 
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		x := int(rl.GetMouseX()) / totalCellSize
-		y := int(rl.GetMouseY()) / totalCellSize
+	x := int(rl.GetMouseX()) / totalCellSize
+	y := int(rl.GetMouseY()) / totalCellSize
 
-		if isSelected {
-			isSelected = false
-			move := chess2.NewMove(selectedX, selectedY, x, y)
-			if board.IsMoveLegal(move) {
-				return &move, shouldClose
-			}
-		} else {
+	var submittedMove *chess2.Move
+	submitMove := func() {
+		mode = selectionModeNone
+		move := chess2.NewMove(selectedX, selectedY, x, y)
+		if board.IsMoveLegal(move) {
+			submittedMove = &move
+		}
+	}
+
+	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+		switch mode {
+		case selectionModeNone:
 			if board.At(x, y).Is(board.Turn) {
 				selectedX = x
 				selectedY = y
-				isSelected = true
+				mode = selectionModeDrag
 				potentialMoves = board.GetMoves(x, y)
+			}
+		case selectionModeSelect:
+			submitMove()
+		case selectionModeDrag:
+			if x == selectedX && y == selectedY {
+				mode = selectionModeSelect
 			}
 		}
 	}
 
-	return nil, shouldClose
+	if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
+		switch mode {
+		case selectionModeDrag:
+			submitMove()
+		}
+	}
+
+	if rl.IsMouseButtonPressed(rl.MouseButtonRight) {
+		mode = selectionModeNone
+	}
+
+	return submittedMove, shouldClose
 }
 
 func Deinit() {
@@ -152,6 +199,7 @@ func Deinit() {
 	}
 
 	rl.UnloadTexture(moveSprite)
+	rl.UnloadTexture(moveSuggestedSprite)
 	rl.UnloadTexture(winSprite)
 	rl.UnloadTexture(lossSprite)
 	rl.CloseWindow()
