@@ -2,7 +2,7 @@ package chess2
 
 import (
 	"context"
-	"iter"
+	"slices"
 	"sync"
 	"time"
 )
@@ -71,23 +71,33 @@ func evaluate(b *Board) float64 {
 	return result
 }
 
-func getAllMoves(b *Board) iter.Seq[Move] {
-	return func(yield func(Move) bool) {
-		for x := range BoardSize {
-			for y := range BoardSize {
-				piece := *b.At(x, y)
-				if piece.Side() != b.Turn {
-					continue
-				}
+func getAllMoves(b *Board) []Move {
+	result := make([]Move, 0, 16)
 
-				for _, m := range b.GetMoves(x, y) {
-					if !yield(m) {
-						return
-					}
-				}
+	for x := range BoardSize {
+		for y := range BoardSize {
+			piece := *b.At(x, y)
+			if piece.Side() != b.Turn {
+				continue
 			}
+
+			result = append(result, b.GetMoves(x, y)...)
 		}
 	}
+
+	score := func(m Move) float64 {
+		capture := *b.At(m.X2, m.Y2)
+		if capture == PieceNone {
+			return 0
+		}
+
+		attacker := *b.At(m.X1, m.Y1)
+		return 1000000 + 100 * Abs(cost[capture]) - Abs(cost[attacker])
+	}
+
+	slices.SortFunc(result, func(a, b Move) int { return Sign(score(b) - score(a)); })
+
+	return result
 }
 
 func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
@@ -98,7 +108,7 @@ func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
 	isMaximizing := b.Turn == SideWhite
 	if isMaximizing {
 		maxEval := -1000000.
-		for m := range getAllMoves(b) {
+		for _, m := range getAllMoves(b) {
 			nextBoard := b.Apply(m)
 			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
 			maxEval = max(maxEval, eval)
@@ -110,7 +120,7 @@ func alphaBeta(b *Board, depth int, alpha, beta float64) float64 {
 		return maxEval
 	} else {
 		minEval := 1000000.
-		for m := range getAllMoves(b) {
+		for _, m := range getAllMoves(b) {
 			nextBoard := b.Apply(m)
 			eval := alphaBeta(nextBoard, depth - 1, alpha, beta)
 			minEval = min(minEval, eval)
@@ -135,12 +145,12 @@ func searchBestResponse(b *Board, out chan map[Move]Move, ctx context.Context) {
 
 		results := make(chan movePair, 10)
 		var wg sync.WaitGroup
-		for m := range getAllMoves(b) {
+		for _, m := range getAllMoves(b) {
 			wg.Go(func() {
 				nextBoard := b.Apply(m)
 				bestScore := 1000000.
 				var bestResponse Move
-				for response := range getAllMoves(nextBoard) {
+				for _, response := range getAllMoves(nextBoard) {
 					score := alphaBeta(nextBoard.Apply(response), depth, -1000000., 1000000)
 					if score < bestScore {
 						bestResponse = response
