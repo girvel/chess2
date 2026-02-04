@@ -136,7 +136,13 @@ func (b *Board) Move(move Move) {
 	case PieceBlackKing: b.Winner = SideWhite
 	}
 
-	*dest = *source
+	if move.Y2 == 0 && *source == PieceWhitePawn {
+		*dest = PieceWhiteQueen
+	} else if move.Y2 == 7 && *source == PieceBlackPawn {
+		*dest = PieceBlackQueen
+	} else {
+		*dest = *source
+	}
 	*source = PieceNone
 	b.Turn = 1 - b.Turn
 	b.LastMove = move
